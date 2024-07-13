@@ -11,7 +11,7 @@ INPUT_DIR = os.path.join(DATA_DIR, "EyeTrackingRaw")
 OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking1")
 
 metrics_list = ['Saccade', 'Fixation', 'Blink',
-                'LeftPupilDiameter', 'RightPupilDiameter',
+                'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                 'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
                 'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
                 'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',

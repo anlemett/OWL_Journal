@@ -10,7 +10,7 @@ import math
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-ET_DIR = os.path.join(DATA_DIR, "EyeTracking5")
+ET_DIR = os.path.join(DATA_DIR, "EyeTracking4")
 EEG_DIR = os.path.join(DATA_DIR, "EEG4")
 ML_DIR = os.path.join(DATA_DIR, "MLInput")
 
@@ -21,13 +21,16 @@ WINDOW_SIZE = 250 * TIME_INTERVAL_DURATION
 features = [
             'SaccadesNumber',
             'SaccadesDurationMean', 'SaccadesDurationStd', 'SaccadesDurationMedian',
+            'SaccadesDurationQuantile25', 'SaccadesDurationQuantile75',
             'SaccadesDurationMin', 'SaccadesDurationMax',
             'FixationDurationMean', 'FixationDurationStd', 'FixationDurationMedian',
+            'FixationDurationQuantile25', 'FixationDurationQuantile75',
             'FixationDurationMin', 'FixationDurationMax',
             'BlinksNumber',
             'BlinksDurationMean', 'BlinksDurationStd', 'BlinksDurationMedian',
+            'BlinksDurationQuantile25', 'BlinksDurationQuantile75',
             'BlinksDurationMin', 'BlinksDurationMax',
-            'LeftPupilDiameter', 'RightPupilDiameter',
+            'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
             'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
             'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
             'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
@@ -146,7 +149,7 @@ def get_TS_np(features):
 
 #print(np.isnan(TS_np).any())
 
-print(TS_np.shape) # 60 -> (1731, 15000, 27)
+print(TS_np.shape) # 60 -> (1731, 15000, 38)
 
 print(len(scores))
 

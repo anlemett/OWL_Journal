@@ -4,7 +4,6 @@ warnings.filterwarnings('ignore')
 import os
 
 import pandas as pd
-import itertools
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -12,7 +11,7 @@ INPUT_DIR = os.path.join(DATA_DIR, "EyeTracking1")
 OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking2")
 
 metrics_list = ['Saccade', 'Fixation', 'Blink',
-                'LeftPupilDiameter', 'RightPupilDiameter',
+                'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                 'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
                 'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
                 'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',

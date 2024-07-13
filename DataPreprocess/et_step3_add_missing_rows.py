@@ -8,18 +8,18 @@ import pandas as pd
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-INPUT_DIR = os.path.join(DATA_DIR, "EyeTracking3")
-OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking4")
+INPUT_DIR = os.path.join(DATA_DIR, "EyeTracking2")
+OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking3")
 
 metrics_list = ['Saccade', 'Fixation', 'Blink',
-                'LeftPupilDiameter', 'RightPupilDiameter',
+                'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                 'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
                 'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
                 'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
                 'RightBlinkClosingSpeed', 'RightBlinkOpeningSpeed',
                 'HeadHeading', 'HeadPitch',	'HeadRoll']
 
-metrics_sublist = ['LeftPupilDiameter', 'RightPupilDiameter',
+metrics_sublist = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                    'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
                    'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
                    'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
@@ -48,7 +48,7 @@ filenames = ["D1r1_MO", "D1r2_MO", "D1r3_MO",
              ]
 
 # for testing
-#filenames = ["D9r4_SV"]
+#filenames = ["D3r2_KB"]
 
 for filename in filenames:
     full_filename = os.path.join(INPUT_DIR, "ET_" + filename +  ".csv")

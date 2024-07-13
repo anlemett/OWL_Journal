@@ -16,13 +16,16 @@ WINDOW_SIZE = 250 * 180
 features = [
             'SaccadesNumber', 
             'SaccadesDurationMean', 'SaccadesDurationStd', 'SaccadesDurationMedian',
+            'SaccadesDurationQuantile25', 'SaccadesDurationQuantile75',
             'SaccadesDurationMin', 'SaccadesDurationMax',
             'FixationDurationMean', 'FixationDurationStd', 'FixationDurationMedian',
+            'FixationDurationQuantile25', 'FixationDurationQuantile75',
             'FixationDurationMin', 'FixationDurationMax',
             'BlinksNumber', 
             'BlinksDurationMean', 'BlinksDurationStd', 'BlinksDurationMedian',
+            'BlinksDurationQuantile25', 'BlinksDurationQuantile75',
             'BlinksDurationMin', 'BlinksDurationMax',
-            'LeftPupilDiameter', 'RightPupilDiameter',
+            'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
             'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
             'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
             'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
@@ -112,7 +115,7 @@ def get_TS_np(features):
 
 (TS_np, scores) = get_TS_np(features)
 
-print(TS_np.shape) # (667, 45000, 27)
+print(TS_np.shape) # (667, 45000, 38)
 print(len(scores))
 
 # Reshape the 3D array to 2D
