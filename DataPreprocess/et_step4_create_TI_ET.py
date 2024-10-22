@@ -66,6 +66,47 @@ def getTimeInterval(timestamp, ch_first_timestamp, ch_last_timestamp):
         return -1
     return math.trunc((timestamp - ch_first_timestamp)/TIME_INTERVAL_DURATION) + 1
 
+def timeSynch(timestamp, atco_num, run):
+    
+    #11/21/2023    -13
+    #11/24/2023    -10
+    #11/28/2023    -8
+    #11/29/2023    -7
+    #11/30/2023    -6
+    #12/5/2023     -1
+    #12/6/2023     0
+    #12/7/2023     1      until run 44
+    #12/7/2023     -24    run 45+
+    #12/15/2023    -34
+    
+    new_timestamp = timestamp
+    
+    if atco_num==1 or atco_num==2:
+        new_timestamp = new_timestamp - 13
+    elif atco_num==3 or atco_num==4:
+        new_timestamp = new_timestamp - 10
+    elif atco_num==5 or atco_num==6:
+        new_timestamp = new_timestamp - 8
+    elif atco_num==7 or atco_num==8:
+        new_timestamp = new_timestamp - 7
+    elif atco_num==9 or atco_num==10:
+        new_timestamp = new_timestamp - 6
+    elif atco_num==11 or atco_num==12:
+        new_timestamp = new_timestamp - 1
+    elif atco_num==13 or atco_num==14:
+        new_timestamp = new_timestamp - 0
+    elif atco_num==15:
+        if run < 3:
+            new_timestamp = new_timestamp + 1
+        else:
+            new_timestamp = new_timestamp - 24
+    elif atco_num==16:
+        new_timestamp = new_timestamp - 24
+    else:
+        new_timestamp = new_timestamp - 34
+
+    return new_timestamp
+
 
 TI_df = pd.DataFrame()
 
@@ -84,6 +125,12 @@ for atco in filenames:
         
         #negative_count = df['LeftBlinkOpeningAmplitude'].lt(0).sum()
         #print(negative_count)
+        
+        # adjust ET timestamps (time synchronization)
+        df['UnixTimestamp'] = df.apply(lambda row: timeSynch(row['UnixTimestamp'],
+                                                             atco_num,
+                                                             run),
+                                       axis=1)
                        
         first_timestamp = df['UnixTimestamp'].tolist()[0]
                       
