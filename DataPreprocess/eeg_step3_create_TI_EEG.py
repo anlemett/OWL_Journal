@@ -30,6 +30,7 @@ filenames = [["D1r1_MO", "D1r2_MO", "D1r3_MO"],
              ["D6r4_HC", "D6r5_HC", "D6r6_HC"],
              ["D7r1_LS", "D7r2_LS", "D7r3_LS"],
              ["D7r4_ML", "D7r5_ML", "D7r6_ML"],
+             [],
              [           "D8r5_AK", "D8r6_AK"],
              ["D9r1_RE", "D9r2_RE", "D9r3_RE"],
              ["D9r4_SV", "D9r5_SV", "D9r6_SV"]
@@ -47,7 +48,15 @@ def getTimeInterval(timestamp, ch_first_timestamp, ch_last_timestamp):
 
 ML_df = pd.DataFrame()
 
+atco_num = 0
+
 for atco in filenames:
+    
+    atco_num = atco_num + 1
+    
+    if not atco:
+        continue
+    
     atco_df = pd.DataFrame()
     run = 1
     for filename in atco:
@@ -90,7 +99,7 @@ for atco in filenames:
                 ti_stress_median = median(ti_df.dropna()['stress'].tolist())
 
                 
-            new_row = {'ATCO': filename[-2:], 'Run': run, 'timeInterval': ti,
+            new_row = {'ATCO': atco_num, 'Run': run, 'timeInterval': ti,
                        'WorkloadMean': ti_wl_mean, 'WorkloadMedian': ti_wl_median,
                        'VigilanceMean': ti_vig_mean, 'VigilanceMedian': ti_vig_median,
                        'StressMean': ti_stress_mean, 'StressMedian': ti_stress_median,

@@ -14,8 +14,8 @@ ET_DIR = os.path.join(DATA_DIR, "EyeTracking3")
 CH_DIR = os.path.join(DATA_DIR, "CH1")
 OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking4")
 
-TIME_INTERVAL_DURATION = 60  #sec
 #TIME_INTERVAL_DURATION = 180  #sec
+TIME_INTERVAL_DURATION = 60  #sec
 
 filenames = [["D1r1_MO", "D1r2_MO", "D1r3_MO"],
              ["D1r4_EI", "D1r5_EI", "D1r6_EI"],
@@ -69,7 +69,12 @@ def getTimeInterval(timestamp, ch_first_timestamp, ch_last_timestamp):
 
 TI_df = pd.DataFrame()
 
+atco_num = 0
+
 for atco in filenames:
+    
+    atco_num = atco_num + 1
+    
     atco_df = pd.DataFrame()
     run = 1
     for filename in atco:
@@ -286,7 +291,8 @@ for atco in filenames:
         df = df.drop('Blink', axis=1)
         
         row_num = len(df.index)
-        df['ATCO'] = [filename[-2:]] * row_num
+        #df['ATCO'] = [filename[-2:]] * row_num
+        df['ATCO'] = [atco_num] * row_num
         df['Run'] = [run] * row_num
         run = run + 1    
 

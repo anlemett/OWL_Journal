@@ -75,12 +75,12 @@ def get_TS_np(features):
   
     dim1_idx = 0
 
-    atco_num = 0
-    for atco in ATCOs:
-        print(atco)
-        atco_num = atco_num + 1
-        et_atco_df = et_df[et_df['ATCO']==atco]
-        eeg_atco_df = eeg_df[eeg_df['ATCO']==atco]
+    for atco_num in range(1,19):
+
+        print(atco_num)
+
+        et_atco_df = et_df[et_df['ATCO']==atco_num]
+        eeg_atco_df = eeg_df[eeg_df['ATCO']==atco_num]
         
         if et_atco_df.empty or eeg_atco_df.empty:
             continue
