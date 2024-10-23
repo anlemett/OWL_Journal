@@ -17,7 +17,15 @@ metrics_list = ['Saccade', 'Fixation', 'Blink',
                 'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
                 'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
                 'RightBlinkClosingSpeed', 'RightBlinkOpeningSpeed',
-                'HeadHeading', 'HeadPitch',	'HeadRoll']
+                'HeadHeading', 'HeadPitch', 'HeadRoll']
+
+float_metrics_list = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
+                      'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
+                      'LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
+                      'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
+                      'RightBlinkClosingSpeed', 'RightBlinkOpeningSpeed',
+                      'HeadHeading', 'HeadPitch', 'HeadRoll']
+
 
 metrics_sublist = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                    'LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
@@ -107,19 +115,11 @@ for filename in filenames:
     new_df.reset_index(drop=True, inplace=True)
     
     # Float values: fill NaNs with linear interpolation of respective columns
-    new_df.interpolate(method='linear', limit_direction='both', axis=0, inplace=True)
-    #fill the null rows with the median of respective columns
-    #new_df = new_df.fillna(new_df.median())
-    
-    # Integer values (Saccade and Fixation): propagate last valid observation
-    # forward to next valid
-    #new_df = new_df.fillna(method='ffill')
-    # Fill NaNs for Saccade with zero value
-    new_df[['Saccade']] = new_df[['Saccade']].fillna(value=0)
-    # Fill NaNs for Fixation with non zero value
-    new_df[['Fixation']] = new_df[['Fixation']].fillna(value=1)
-    # Fill NaNs for Blink with zero value
-    new_df[['Blink']] = new_df[['Blink']].fillna(value=0)
+    new_df[float_metrics_list] = new_df[float_metrics_list].interpolate(
+        method='linear', limit_direction='both', axis=0)
+
+    # Saccade, Fixation and Blinks: linear interpolation is performed for
+    # statistical summary features on the next step
     
     number_of_timestamps = last_timestamp - first_timestamp + 1
     number_of_rows1 = number_of_timestamps*250
