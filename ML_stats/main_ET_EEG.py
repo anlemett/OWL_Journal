@@ -24,46 +24,24 @@ from features import init_blinks_mean, init_blinks_median, init_blinks_sd
 from features import init_blinks_min, init_blinks_max, init_blinks_mean_median
 from features import init_blinks_number
 
-# TODO: without quantiles
-
-# 3 classes, HGBC, 60 seconds
-#columns_to_select = init # acc=0.84, f1=0.77 #58
-columns_to_select = init_blinks # acc=0.87, f1=0.82 #64 ! init
-                                # 
-                                # 
-                       # with av.bl.amp&speed + diam, drop orig.: acc=0.84, f1=0.8 #47
-                       # with abs(dif), drop orig.: acc=0.79, f1=0.72 #47
-                       # with abs(dif), keep orig.: acc=0.85, f1=0.78 #81
-#columns_to_select = init_blinks_number # acc=0.48, f1=0.4 #1
-#columns_to_select = init_blinks_mean # acc=0.81, f1=0.72 #18
-#columns_to_select = init_blinks_median # acc=0.83, f1=0.77 #10
-#columns_to_select = init_blinks_sd # acc=0.74, f1=0.64 #18
-#columns_to_select = init_blinks_min # acc=0.64, f1=0.52 #8
-#columns_to_select = init_blinks_max # acc=0.79, f1=0.65 #18
-#columns_to_select = init_blinks_mean_median # acc=0.83, f1=0.71 #26
-#columns_to_select = init_quantiles # acc=0.87, f1=0.79 #89
-#columns_to_select = init_blinks_quantiles # acc=0.88, f1=0.81. #96
-#columns_to_select = init_blinks_without_diam # acc=0.83, f1=0.76 #54
-#columns_to_select = saccade_fixation_blinks # acc=0.67, f1=0.47 #15
-#columns_to_select = saccade_fixation_blinks_head # acc=0.78, f1=0.73 #30
-#columns_to_select = init_blinks_without_head # acc=0.81, f1=0.75 #49
-#columns_to_select = blinks # acc=0.76, f1=0.66 #30
-                           # with dif: acc=0.77, f1=0.66 #42
-                           # with abs(dif): acc=0.78, f1=0.65 #42
-                           # with drop the original: acc=0.59, f1=0.47 #18
-                           # with av. and drop: acc=76, f1=0.68 #18
-#columns_to_select = blinks_quantiles # acc=0.78, f1=0.69 #
+#columns_to_select = init
+columns_to_select = init_blinks
+#columns_to_select = init_blinks_number
+#columns_to_select = init_blinks_mean
+#columns_to_select = init_blinks_median
+#columns_to_select = init_blinks_sd
+#columns_to_select = init_blinks_min
+#columns_to_select = init_blinks_max
+#columns_to_select = init_blinks_mean_median
+#columns_to_select = init_quantiles
+#columns_to_select = init_blinks_quantiles
+#columns_to_select = init_blinks_without_diam
+#columns_to_select = saccade_fixation_blinks
+#columns_to_select = saccade_fixation_blinks_head
+#columns_to_select = init_blinks_without_head
+#columns_to_select = blinks
+#columns_to_select = blinks_quantiles
   
-
-# binary, RF
-#columns_to_select = init # acc=0.95, f1=0.81 #58
-#columns_to_select = init_blinks # acc=0.97, f1=0.87 #64
-#columns_to_select = init_blinks_number # acc=0.74, f1=0.48 #1
-#columns_to_select = init_quantiles # acc=0.95, f1=0.81 #89
-#columns_to_select = init_blinks_quantiles # acc=0.97, f1=0.85 #96
-#columns_to_select = init_blinks_without_diam # acc=0., f1=0.
-#columns_to_select = saccade_fixation_blinks # acc=0., f1=0.
-
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -73,7 +51,7 @@ FIG_DIR = os.path.join(".", "Figures")
 
 RANDOM_STATE = 0
 
-BINARY = False
+BINARY = True
 EQUAL_PERCENTILES = False
 
 #MODEL = "LR"
@@ -142,6 +120,18 @@ def main():
     data_df = pd.read_csv(full_filename, sep=' ')
     data_df = data_df.drop('ATCO', axis=1)
     
+    total_nan_count = data_df.isna().sum().sum()
+    print("Number of NaNs in data_df:", total_nan_count)
+    
+    #nan_counts_per_column = data_df.isna().sum()
+    #print(nan_counts_per_column.to_string())
+    
+    num_rows = len(data_df)
+    print("Number of rows:", num_rows)
+    
+    total_non_nan_count = data_df.count().sum()
+    print("Number of non NaNs in data_df:", total_non_nan_count)
+    
     data_df = data_df[columns_to_select]
     
     '''    
@@ -173,8 +163,14 @@ def main():
     
     full_filename = os.path.join(ML_DIR, "ML_ET_EEG_" + str(TIME_INTERVAL_DURATION) + "__EEG.csv")
 
-    scores_np = np.loadtxt(full_filename, delimiter=" ")
+    scores_df = pd.read_csv(full_filename, sep=' ')
     
+    total_nan_count = scores_df.isna().sum().sum()
+    print("Number of NaNs in scores_df:", total_nan_count)
+    
+    scores_np = scores_df.to_numpy()
+    num_nans = np.isnan(scores_np).sum()
+    print("Number of NaNs in scores_np:", num_nans)
     
     features_np = data_df.to_numpy()
     
@@ -186,12 +182,31 @@ def main():
     #print(scores_np.shape)
     
     scores_np = scores_np[0,:] # Workload
+    
+    print(features_np.shape)
+    print(scores_np.shape)
+    
+    num_nans = np.isnan(features_np).sum()
+    print("Number of NaNs in features_np:", num_nans)
 
-    zipped = list(zip(features_np, scores_np))
+    num_nans = np.isnan(scores_np).sum()
+    print("Number of NaNs in scores_np:", num_nans)
 
-    np.random.shuffle(zipped)
 
-    features_np, scores_np = zip(*zipped)
+    # Stack features and scores as columns in a 2D array
+    np_array = np.hstack((features_np, scores_np.reshape(-1, 1)))
+
+    # Remove rows containing NaN values
+    np_array_cleaned = np_array[~np.isnan(np_array).any(axis=1)]
+
+    # Shuffle the cleaned array
+    np.random.shuffle(np_array_cleaned)
+
+    # Separate features and scores back into individual arrays
+    features_np, scores_np = np_array_cleaned[:, :-1], np_array_cleaned[:, -1]
+
+    print(features_np.shape)
+    print(scores_np.shape)
 
     scores = list(scores_np)
     

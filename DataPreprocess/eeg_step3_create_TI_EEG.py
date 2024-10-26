@@ -3,6 +3,7 @@ warnings.filterwarnings('ignore')
 
 import os
 import pandas as pd
+import numpy as np
 import math
 from statistics import mean, median
 #import sys
@@ -15,6 +16,7 @@ CH_DIR = os.path.join(DATA_DIR, "CH1")
 OUTPUT_DIR = os.path.join(DATA_DIR, "EEG4")
 
 TIME_INTERVAL_DURATION = 60  #sec
+#TIME_INTERVAL_DURATION = 1  #sec
 
 filenames = [["D1r1_MO", "D1r2_MO", "D1r3_MO"],
              ["D1r4_EI", "D1r5_EI", "D1r6_EI"],
@@ -63,6 +65,7 @@ for atco in filenames:
         print(filename)
         full_filename = os.path.join(EEG_DIR, filename +  ".csv")
         df = pd.read_csv(full_filename, sep=' ')
+        new_df = pd.DataFrame()
         
         full_filename = os.path.join(CH_DIR, filename + ".csv")
         scores_df = pd.read_csv(full_filename, sep=' ')
@@ -83,31 +86,51 @@ for atco in filenames:
         
         for ti in range (1, number_of_time_intervals + 1):
             ti_df = df[df['timeInterval']==ti]
-            if ti_df.empty:
-                 ti_wl_mean = None
-                 ti_wl_median = None
-                 ti_vig_mean = None
-                 ti_vig_median = None
-                 ti_stress_mean = None
-                 ti_stress_median = None
-            else:
-                ti_wl_mean = mean(ti_df.dropna()['workload'].tolist())
-                ti_wl_median = median(ti_df.dropna()['workload'].tolist())
-                ti_vig_mean = mean(ti_df.dropna()['vigilance'].tolist())
-                ti_vig_median = median(ti_df.dropna()['vigilance'].tolist())
-                ti_stress_mean = mean(ti_df.dropna()['stress'].tolist())
-                ti_stress_median = median(ti_df.dropna()['stress'].tolist())
 
+            if ti_df.empty:
+                ti_wl_mean = np.nan
+                ti_wl_median = np.nan
+                ti_vig_mean = np.nan
+                ti_vig_median = np.nan
+                ti_stress_mean = np.nan
+                ti_stress_median = np.nan
+            else:
+                temp_df = ti_df.dropna()
+                if temp_df.empty:
+                     ti_wl_mean = np.nan
+                     ti_wl_median = np.nan
+                     ti_vig_mean = np.nan
+                     ti_vig_median = np.nan
+                     ti_stress_mean = np.nan
+                     ti_stress_median = np.nan
+                else:
+                    ti_wl_mean = mean(temp_df['workload'].tolist())
+                    ti_wl_median = median(temp_df['workload'].tolist())
+                    ti_vig_mean = mean(temp_df['vigilance'].tolist())
+                    ti_vig_median = median(temp_df['vigilance'].tolist())
+                    ti_stress_mean = mean(temp_df['stress'].tolist())
+                    ti_stress_median = median(temp_df['stress'].tolist())
                 
             new_row = {'ATCO': atco_num, 'Run': run, 'timeInterval': ti,
                        'WorkloadMean': ti_wl_mean, 'WorkloadMedian': ti_wl_median,
                        'VigilanceMean': ti_vig_mean, 'VigilanceMedian': ti_vig_median,
                        'StressMean': ti_stress_mean, 'StressMedian': ti_stress_median,
                        }
+            
+            new_df = pd.concat([new_df, pd.DataFrame([new_row])], ignore_index=True)
 
-            ML_df = pd.concat([ML_df, pd.DataFrame([new_row])], ignore_index=True)
+        #print(ML_df['WorkloadMean'].isna().sum())
+        
+        # Fill NaN values: linear interpolation of respective columns,
+        # NaNs at the beginning and at the end are left unchanged
+        #new_df.interpolate(method='linear', limit_direction='both', axis=0, inplace=True)
+        
+        ML_df = pd.concat([ML_df, new_df], ignore_index=True)
                 
         run = run + 1
         
+total_nan_count = ML_df.isna().sum().sum()
+print("Number of NaNs in ML_df:", total_nan_count)
+
 full_filename = os.path.join(OUTPUT_DIR, "EEG_all_" + str (TIME_INTERVAL_DURATION) + ".csv")
 ML_df.to_csv(full_filename, sep=' ', encoding='utf-8', index = False, header = True)

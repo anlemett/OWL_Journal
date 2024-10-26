@@ -4,6 +4,7 @@ warnings.filterwarnings('ignore')
 import os
 
 import pandas as pd
+import numpy as np
 from statistics import mean 
 
 DATA_DIR = os.path.join("..", "..")
@@ -61,26 +62,37 @@ for filename in filenames:
         ts_df = df[df['UnixTimestamp']==ts]
  
         if ts_df.empty:
+            # Two ways to hadndle
             print(filename + ": empty second")
+            # drop this second:
             continue
+            # set to NaN with linear interpolation later
+            #eeg_wl_av = np.nan
+            #eeg_vig_av = np.nan
+            #eeg_vig_av = np.nan
+            
+        else:
         
-        eeg_wl_av = mean(ts_df['workload'].tolist())
+            eeg_wl_av = mean(ts_df['workload'].tolist())
         
-        vig_lst = ts_df['vigilance'].tolist()
+            vig_lst = ts_df['vigilance'].tolist()
         
-        for i in range(1, len(vig_lst)): #0 element seems to be fine in all files
-            if vig_lst[i]>100:
-                vig_lst[i] = vig_lst[i-1] 
+            for i in range(1, len(vig_lst)): #0 element seems to be fine in all files
+                if vig_lst[i]>100:
+                    vig_lst[i] = vig_lst[i-1] 
         
-        eeg_vig_av = mean(vig_lst)
+            eeg_vig_av = mean(vig_lst)
         
-        eeg_stress_av = mean(ts_df['stress'].tolist())
+            eeg_stress_av = mean(ts_df['stress'].tolist())
         
         
         # append the row
         new_row = {'UnixTimestamp': ts, 'workload': eeg_wl_av,
                    'vigilance': eeg_vig_av, 'stress': eeg_stress_av}
         new_df = pd.concat([new_df, pd.DataFrame([new_row])], ignore_index=True)
+        
+    # Fill NaN values: linear interpolation of respective columns
+    #new_df.interpolate(method='linear', limit_direction='both', axis=0, inplace=True)
  
     full_filename = os.path.join(OUTPUT_DIR, filename +  ".csv")
     new_df.to_csv(full_filename, sep=' ', encoding='utf-8', index = False, header = True)

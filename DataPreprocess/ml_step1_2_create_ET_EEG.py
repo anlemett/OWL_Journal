@@ -74,10 +74,12 @@ def get_TS_np(features):
     eeg_df = pd.read_csv(full_filename, sep=' ')
   
     dim1_idx = 0
+    
+    total_time_slots_num = 0
 
     for atco_num in range(1,19):
 
-        print(atco_num)
+        print(f"ATCO: {atco_num}")
 
         et_atco_df = et_df[et_df['ATCO']==atco_num]
         eeg_atco_df = eeg_df[eeg_df['ATCO']==atco_num]
@@ -86,13 +88,23 @@ def get_TS_np(features):
             continue
         
         for run in range(1,4):
+            
+            print(f"Run: {run}")
             et_run_df = et_atco_df[et_atco_df['Run']==run]
             eeg_run_df = eeg_atco_df[eeg_atco_df['Run']==run]
             
             if et_run_df.empty or eeg_run_df.empty:
                 continue
         
-            number_of_time_intervals = len(eeg_run_df['timeInterval'].tolist())
+            # EEG start and end times are synchronised with CHS
+            number_of_time_intervals_eeg = len(eeg_run_df['timeInterval'].tolist())
+            print(f"Number of EEG time intervals: {number_of_time_intervals_eeg}")
+            # ET start and end times are synchronised with CHS
+            number_of_time_intervals_et = len(set(et_run_df['timeInterval'].tolist()))
+            print(f"Number of ET time intervals: {number_of_time_intervals_et}")
+            number_of_time_intervals = min(number_of_time_intervals_eeg, number_of_time_intervals_et)
+            print(f"Number of time intervals: {number_of_time_intervals}")
+            total_time_slots_num = total_time_slots_num + number_of_time_intervals
         
             run_TS_np = np.zeros(shape=(number_of_time_intervals, window_size, number_of_features))
             run_WL_scores = []
@@ -109,12 +121,16 @@ def get_TS_np(features):
                 ti_Vig_score_lst = eeg_ti_df['VigilanceMean'].tolist()
                 ti_Stress_score_lst = eeg_ti_df['StressMean'].tolist()
                 if math.isnan(ti_WL_score_lst[0]):
+                    print("WL is NaN")
                     continue
                 if math.isnan(ti_Vig_score_lst[0]):
+                    print("Vigilance is NaN")
                     continue                
                 if math.isnan(ti_Stress_score_lst[0]):
+                    print("Stress is NaN")
                     continue
                 if et_ti_df.empty:
+                    print(f"ET time interval is empty: {ti}")
                     continue
                 
                 ti_WL_score = ti_WL_score_lst[0]
@@ -135,6 +151,7 @@ def get_TS_np(features):
                 dim1_idx = dim1_idx + 1
                 
             if dim1_idx < number_of_time_intervals:
+                print("dim1_idx < number_of_time_intervals")
                 run_TS_np = run_TS_np[:dim1_idx]
                 
             TS_np = np.append(TS_np, run_TS_np, axis=0)
@@ -143,6 +160,9 @@ def get_TS_np(features):
             all_Stress_scores.extend(run_Stress_scores)
 
     all_scores = np.array((all_WL_scores, all_Vig_scores, all_Stress_scores))
+    
+    print("Total time slots number: {total_time_slots_num}")
+    
     return (TS_np, all_scores)
 
 (TS_np, scores) = get_TS_np(features)

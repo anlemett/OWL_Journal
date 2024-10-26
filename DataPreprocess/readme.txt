@@ -19,7 +19,7 @@ et_step3
 et_step4 (TIME_INTERVAL_DURATION = 60)
 
 eeg_step1
-eeg_step2
+eeg_step2 <- only if you want to normalize data per ATCO, + change Input folder in step 3
 eeg_step3
 
 ml_step1_2

@@ -158,6 +158,9 @@ for atco in filenames:
         
         timeIntervals = set(df['timeInterval'].tolist())
         number_of_time_intervals = len(timeIntervals)
+        
+        print("Number of time intervals: ")
+        print(number_of_time_intervals)
                         
         SaccadesNumber = []
         SaccadesDurationMean = []
@@ -185,7 +188,23 @@ for atco in filenames:
         BlinksDurationMin = []
         BlinksDurationMax = []
 
-       
+
+        # Saccade and Fixation can not be 0 simultaneously
+        df.loc[(df['Saccade'] == 0) & (df['Fixation'] == 0), ['Saccade', 'Fixation']] = np.nan
+        
+        # Percent of missing Saccade values
+        nan_percentage = (df['Saccade'].isna().sum() / len(df['Saccade'])) * 100
+        print(f"Percentage of NaNs in Saccade: {nan_percentage:.2f}%")
+
+        # Percent of missing Fixation values
+        nan_percentage = (df['Fixation'].isna().sum() / len(df['Fixation'])) * 100
+        print(f"Percentage of NaNs in Fixation: {nan_percentage:.2f}%")
+        
+        # Percent of missing Blink values
+        nan_percentage = (df['Blink'].isna().sum() / len(df['Blink'])) * 100
+        print(f"Percentage of NaNs in Blink: {nan_percentage:.2f}%")
+
+
         #Add Saccade number, total duration and duration stats per period
         for ti in range(1, number_of_time_intervals+1):
             ti_df = df[df['timeInterval']==ti]
@@ -193,9 +212,9 @@ for atco in filenames:
             if ti_df.empty: # should not be the case
                 continue
             
-            has_nans = ti_df['Saccade'].isna().any()
+            nona_ti_saccade_df = ti_df.dropna(subset=['Saccade'])
             
-            if has_nans: # statistical summary might be imprecise
+            if nona_ti_saccade_df.empty: # incomplete data (data loss)
                 # set to NA, then use linear interpolation over the column
                 saccades_number = np.nan
                 saccades_duration_mean = np.nan
@@ -206,27 +225,14 @@ for atco in filenames:
                 saccades_duration_min = np.nan
                 saccades_duration_max = np.nan
             else:
-                
-                ti_saccades_df = ti_df[ti_df['Saccade']!=0]
-                
-                if ti_saccades_df.empty: # incomplete data (data loss)
-                    # set to NA, then use linear interpolation over the column
-                    saccades_number = np.nan
-                    saccades_duration_mean = np.nan
-                    saccades_duration_std = np.nan
-                    saccades_duration_median = np.nan
-                    saccades_duration_quantile25 = np.nan
-                    saccades_duration_quantile75 = np.nan
-                    saccades_duration_min = np.nan
-                    saccades_duration_max = np.nan
-                else:
-                    saccades_set = set(ti_saccades_df['Saccade'].tolist())
-                    saccades_number = len(saccades_set)
-                    saccades_duration = []
-                    for saccade in saccades_set:
-                        saccade_df = ti_df[ti_df['Saccade']==saccade]
-                        if not saccade_df.empty:
-                            saccades_duration.append(len(saccade_df.index))
+                ti_saccades_df = nona_ti_saccade_df[nona_ti_saccade_df['Saccade']!=0]
+                saccades_set = set(ti_saccades_df['Saccade'].tolist())
+                saccades_number = len(saccades_set)
+                saccades_duration = []
+                for saccade in saccades_set:
+                    saccade_df = ti_df[ti_df['Saccade']==saccade]
+                    if not saccade_df.empty:
+                        saccades_duration.append(len(saccade_df.index))
                     
                     saccades_duration_mean = statistics.mean(saccades_duration)
                     saccades_duration_std = statistics.stdev(saccades_duration) if len(saccades_duration)>1 else 0
@@ -239,9 +245,9 @@ for atco in filenames:
                     saccades_duration_max = max(saccades_duration)
 
 
-            has_nans = ti_df['Fixation'].isna().any()
-            
-            if has_nans: # statistical summary might be imprecise
+            nona_ti_fixation_df = ti_df.dropna(subset=['Fixation'])
+
+            if nona_ti_fixation_df.empty: # incomplete data (data loss)
                 # set to NA, then use linear interpolation over the column
                 fixation_number = np.nan
                 fixation_duration_mean = np.nan
@@ -253,55 +259,41 @@ for atco in filenames:
                 fixation_duration_max = np.nan
 
             else:
-                ti_fixation_df = ti_df[ti_df['Fixation']!=0]
-
-                if ti_fixation_df.empty: # incomplete data (data loss)
-                    # set to NA, then use linear interpolation over the column
-                    fixation_number = np.nan
-                    fixation_duration_mean = np.nan
-                    fixation_duration_std = np.nan
-                    fixation_duration_median = np.nan
-                    fixation_duration_quantile25 = np.nan
-                    fixation_duration_quantile75 = np.nan
-                    fixation_duration_min = np.nan
-                    fixation_duration_max = np.nan
-
-                else:
-                    fixation_set = set(ti_fixation_df['Fixation'].tolist())
-                    fixation_duration = []
-                    for fixation in fixation_set:
-                        fixation_df = ti_df[ti_df['Fixation']==fixation]
-                        if not fixation_df.empty:
-                            fixation_duration.append(len(fixation_df.index))
+                ti_fixation_df = nona_ti_fixation_df[nona_ti_fixation_df['Fixation']!=0]
+                fixation_set = set(ti_fixation_df['Fixation'].tolist())
+                fixation_duration = []
+                for fixation in fixation_set:
+                    fixation_df = ti_df[ti_df['Fixation']==fixation]
+                    if not fixation_df.empty:
+                        fixation_duration.append(len(fixation_df.index))
                     
-                    fixation_duration_mean = statistics.mean(fixation_duration)
-                    fixation_duration_std = statistics.stdev(fixation_duration) if len(fixation_duration)>1 else 0
-                    fixation_duration_median = statistics.median(fixation_duration)
-                    first_el = fixation_duration[0]
-                    quantiles = statistics.quantiles(fixation_duration) if len(fixation_duration)>1 else [first_el]*3
-                    fixation_duration_quantile25 = quantiles[0]
-                    fixation_duration_quantile75 = quantiles[2]
-                    fixation_duration_min = min(fixation_duration)
-                    fixation_duration_max = max(fixation_duration)
+                fixation_duration_mean = statistics.mean(fixation_duration)
+                fixation_duration_std = statistics.stdev(fixation_duration) if len(fixation_duration)>1 else 0
+                fixation_duration_median = statistics.median(fixation_duration)
+                first_el = fixation_duration[0]
+                quantiles = statistics.quantiles(fixation_duration) if len(fixation_duration)>1 else [first_el]*3
+                fixation_duration_quantile25 = quantiles[0]
+                fixation_duration_quantile75 = quantiles[2]
+                fixation_duration_min = min(fixation_duration)
+                fixation_duration_max = max(fixation_duration)
 
-            has_nans = ti_df['Fixation'].isna().any()
-            
-            if has_nans: # statistical summary might be imprecise
-                # set to NA, then use linear interpolation over the column
-                blinks_number = np.nan
-                blinks_duration_mean = np.nan
-                blinks_duration_std = np.nan
-                blinks_duration_median = np.nan
-                quantiles = np.nan
-                blinks_duration_quantile25 = np.nan
-                blinks_duration_quantile75 = np.nan
-                blinks_duration_min = np.nan
-                blinks_duration_max = np.nan
+
+            nona_ti_blink_df = ti_df.dropna(subset=['Blink'])
+
+            if nona_ti_blink_df.empty: # possible if time interval is small
+                blinks_number = 0
+                blinks_duration_mean = 0
+                blinks_duration_std = 0
+                blinks_duration_median = 0
+                blinks_duration_quantile25 = 0
+                blinks_duration_quantile75 = 0
+                blinks_duration_min = 0
+                blinks_duration_max = 0
 
             else:
-                ti_blinks_df = ti_df[ti_df['Blink']!=0]
+                ti_blinks_df = nona_ti_blink_df[nona_ti_blink_df['Blink']!=0]
                 
-                if ti_blinks_df.empty: # possible if time interval is small
+                if ti_blinks_df.empty: # possible
                     blinks_number = 0
                     blinks_duration_mean = 0
                     blinks_duration_std = 0
@@ -310,7 +302,6 @@ for atco in filenames:
                     blinks_duration_quantile75 = 0
                     blinks_duration_min = 0
                     blinks_duration_max = 0
-
                 else:
                     blinks_set = set(ti_blinks_df['Blink'].tolist())
                     blinks_number = len(blinks_set)
