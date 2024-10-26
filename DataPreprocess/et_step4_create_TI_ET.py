@@ -190,7 +190,9 @@ for atco in filenames:
 
 
         # Saccade and Fixation can not be 0 simultaneously
-        df.loc[(df['Saccade'] == 0) & (df['Fixation'] == 0), ['Saccade', 'Fixation']] = np.nan
+        #df.loc[(df['Saccade'] == 0) & (df['Fixation'] == 0), ['Saccade', 'Fixation']] = np.nan
+        df.loc[(df['Saccade'] == 0) & (df['Fixation'] == 0), ['Fixation']] = 1
+        df.loc[df['Saccade'].isna() & df['Fixation'].isna(), ['Saccade', 'Fixation']] = [0, 1]
         
         # Percent of missing Saccade values
         nan_percentage = (df['Saccade'].isna().sum() / len(df['Saccade'])) * 100

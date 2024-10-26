@@ -22,10 +22,11 @@ from features import saccade_fixation_blinks_head, init_blinks_without_head, bli
 from features import blinks_quantiles, blinks_left, blinks_right, left, right
 from features import init_blinks_mean, init_blinks_median, init_blinks_sd
 from features import init_blinks_min, init_blinks_max, init_blinks_mean_median
-from features import init_blinks_number
+from features import init_blinks_number, init_blink_without_saccade
 
 #columns_to_select = init
-columns_to_select = init_blinks
+#columns_to_select = init_blinks
+columns_to_select = init_blink_without_saccade
 #columns_to_select = init_blinks_number
 #columns_to_select = init_blinks_mean
 #columns_to_select = init_blinks_median
