@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import os
+import numpy as np
 import pandas as pd
 import numpy as np
 import math
@@ -10,40 +11,42 @@ from statistics import mean, median
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-#EEG_DIR = os.path.join(DATA_DIR, "EEG3") #normalized data
-EEG_DIR = os.path.join(DATA_DIR, "EEG2") #raw data
-CH_DIR = os.path.join(DATA_DIR, "CH1")
-OUTPUT_DIR = os.path.join(DATA_DIR, "EEG4")
+EEG_DIR = os.path.join(DATA_DIR, "EEG1")
+CH_DIR = os.path.join(DATA_DIR, "CH0_orig")
+OUTPUT_DIR = os.path.join(DATA_DIR, "EEG2")
 
-TIME_INTERVAL_DURATION = 60  #sec
-#TIME_INTERVAL_DURATION = 1  #sec
+#TIME_INTERVAL_DURATION = 300
+TIME_INTERVAL_DURATION = 180
+#TIME_INTERVAL_DURATION = 60
+#TIME_INTERVAL_DURATION = 30
+#TIME_INTERVAL_DURATION = 10
+#TIME_INTERVAL_DURATION = 1
 
-filenames = [["D1r1_MO", "D1r2_MO", "D1r3_MO"],
-             ["D1r4_EI", "D1r5_EI", "D1r6_EI"],
-             ["D2r1_KV", "D2r2_KV", "D2r2_KV"],
-             ["D2r4_UO", "D2r5_UO", "D2r6_UO"],
-             ["D3r1_KB", "D3r2_KB", "D3r3_KB"],
-             ["D3r4_PF", "D3r5_PF", "D3r6_PF"],
-             ["D4r1_AL", "D4r2_AL", "D4r3_AL"],
-             ["D4r4_IH", "D4r5_IH", "D4r6_IH"],
-             ["D5r1_RI", "D5r2_RI", "D5r3_RI"],
-             ["D5r4_JO", "D5r5_JO", "D5r6_JO"],
-             ["D6r1_AE", "D6r2_AE", "D6r3_AE"],
-             ["D6r4_HC", "D6r5_HC", "D6r6_HC"],
-             ["D7r1_LS", "D7r2_LS", "D7r3_LS"],
-             ["D7r4_ML", "D7r5_ML", "D7r6_ML"],
+filenames = [["D1r1", "D1r2", "D1r3"],
+             ["D1r4", "D1r5", "D1r6"],
+             ["D2r1", "D2r2", "D2r2"],
+             ["D2r4", "D2r5", "D2r6"],
+             ["D3r1", "D3r2", "D3r3"],
+             ["D3r4", "D3r5", "D3r6"],
+             ["D4r1", "D4r2", "D4r3"],
+             ["D4r4", "D4r5", "D4r6"],
+             ["D5r1", "D5r2", "D5r3"],
+             ["D5r4", "D5r5", "D5r6"],
+             ["D6r1", "D6r2", "D6r3"],
+             ["D6r4", "D6r5", "D6r6"],
+             ["D7r1", "D7r2", "D7r3"],
+             ["D7r4", "D7r5", "D7r6"],
              [],
-             [           "D8r5_AK", "D8r6_AK"],
-             ["D9r1_RE", "D9r2_RE", "D9r3_RE"],
-             ["D9r4_SV", "D9r5_SV", "D9r6_SV"]
+             [        "D8r5", "D8r6"],
+             ["D9r1", "D9r2", "D9r3"],
+             ["D9r4", "D9r5", "D9r6"]
              ]
 
+#filenames = [["D3r3"]]
 
 def getTimeInterval(timestamp, ch_first_timestamp, ch_last_timestamp):
 
-    if timestamp < ch_first_timestamp:
-        return 0
-    if timestamp > ch_last_timestamp:
+    if (timestamp < ch_first_timestamp) or (timestamp >= ch_last_timestamp):
         return 0
     return math.trunc((timestamp - ch_first_timestamp)/TIME_INTERVAL_DURATION) + 1
 
@@ -72,21 +75,24 @@ for atco in filenames:
         
         ch_first_timestamp = scores_df['timestamp'].loc[0]
         ch_last_timestamp = scores_df['timestamp'].tolist()[-1]
+        
+        print(ch_last_timestamp-ch_first_timestamp)
 
         df['timeInterval'] = df.apply(lambda row: getTimeInterval(row['UnixTimestamp'],
                                                                   ch_first_timestamp,
                                                                   ch_last_timestamp
                                                                   ),
                                       axis=1) 
-
+        
         df = df[df['timeInterval']!=0]
         
-        eeg_timeintervals = set(df['timeInterval'].tolist())
-        number_of_time_intervals = len(eeg_timeintervals)
+        number_of_time_intervals = max(df['timeInterval'].tolist())
+        
+        print(f"Number of time intervals: {number_of_time_intervals}")
         
         for ti in range (1, number_of_time_intervals + 1):
             ti_df = df[df['timeInterval']==ti]
-
+            
             if ti_df.empty:
                 ti_wl_mean = np.nan
                 ti_wl_median = np.nan
@@ -112,9 +118,9 @@ for atco in filenames:
                     ti_stress_median = median(temp_df['stress'].tolist())
                 
             new_row = {'ATCO': atco_num, 'Run': run, 'timeInterval': ti,
-                       'WorkloadMean': ti_wl_mean, 'WorkloadMedian': ti_wl_median,
-                       'VigilanceMean': ti_vig_mean, 'VigilanceMedian': ti_vig_median,
-                       'StressMean': ti_stress_mean, 'StressMedian': ti_stress_median,
+                       'WorkloadMean': ti_wl_mean,
+                       'VigilanceMean': ti_vig_mean,
+                       'StressMean': ti_stress_mean,
                        }
             
             new_df = pd.concat([new_df, pd.DataFrame([new_row])], ignore_index=True)
@@ -128,9 +134,18 @@ for atco in filenames:
         ML_df = pd.concat([ML_df, new_df], ignore_index=True)
                 
         run = run + 1
-        
+
 total_nan_count = ML_df.isna().sum().sum()
-print("Number of NaNs in ML_df:", total_nan_count)
+print("Total number of NaN values in DataFrame: ", total_nan_count)
+
+nan_count = ML_df['WorkloadMean'].isna().sum()
+print("Number of NaN values in WorkloadMean:", nan_count)
+
+nan_count = ML_df['VigilanceMean'].isna().sum()
+print("Number of NaN values in VigilanceMean:", nan_count)
+
+nan_count = ML_df['StressMean'].isna().sum()
+print("Number of NaN values in StressMean:", nan_count)
 
 full_filename = os.path.join(OUTPUT_DIR, "EEG_all_" + str (TIME_INTERVAL_DURATION) + ".csv")
 ML_df.to_csv(full_filename, sep=' ', encoding='utf-8', index = False, header = True)

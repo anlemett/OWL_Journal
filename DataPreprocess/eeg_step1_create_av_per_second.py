@@ -3,14 +3,15 @@ warnings.filterwarnings('ignore')
 
 import os
 
+import numpy as np
 import pandas as pd
 import numpy as np
 from statistics import mean 
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-INPUT_DIR = os.path.join(DATA_DIR, "EEG1")
-OUTPUT_DIR = os.path.join(DATA_DIR, "EEG2")
+INPUT_DIR = os.path.join(DATA_DIR, "EEG0_orig")
+OUTPUT_DIR = os.path.join(DATA_DIR, "EEG1")
 
 
 def getUnixTimestampS(ts_ms):
@@ -19,26 +20,26 @@ def getUnixTimestampS(ts_ms):
 def getValuesPerSecond(timestamps_dict, unix_timestamp):
     return timestamps_dict[unix_timestamp]
 
-filenames = ["D1r1_MO", "D1r2_MO", "D1r3_MO",
-             "D1r4_EI", "D1r5_EI", "D1r6_EI",
-             "D2r1_KV", "D2r2_KV", "D2r3_KV",
-             "D2r4_UO", "D2r5_UO", "D2r6_UO",
-             "D3r1_KB", "D3r2_KB", "D3r3_KB",
-             "D3r4_PF", "D3r5_PF", "D3r6_PF",
-             "D4r1_AL", "D4r2_AL", "D4r3_AL",
-             "D4r4_IH", "D4r5_IH", "D4r6_IH",
-             "D5r1_RI", "D5r2_RI", "D5r3_RI",
-             "D5r4_JO", "D5r5_JO", "D5r6_JO",
-             "D6r1_AE", "D6r2_AE", "D6r3_AE",
-             "D6r4_HC", "D6r5_HC", "D6r6_HC",
-             "D7r1_LS", "D7r2_LS", "D7r3_LS",
-             "D7r4_ML", "D7r5_ML", "D7r6_ML",
-                        "D8r5_AK", "D8r6_AK",
-             "D9r1_RE", "D9r2_RE", "D9r3_RE",
-             "D9r4_SV", "D9r5_SV", "D9r6_SV"
+filenames = ["D1r1", "D1r2", "D1r3",
+             "D1r4", "D1r5", "D1r6",
+             "D2r1", "D2r2", "D2r3",
+             "D2r4", "D2r5", "D2r6",
+             "D3r1", "D3r2", "D3r3",
+             "D3r4", "D3r5", "D3r6",
+             "D4r1", "D4r2", "D4r3",
+             "D4r4", "D4r5", "D4r6",
+             "D5r1", "D5r2", "D5r3",
+             "D5r4", "D5r5", "D5r6",
+             "D6r1", "D6r2", "D6r3",
+             "D6r4", "D6r5", "D6r6",
+             "D7r1", "D7r2", "D7r3",
+             "D7r4", "D7r5", "D7r6",
+                     "D8r5", "D8r6",
+             "D9r1", "D9r2", "D9r3",
+             "D9r4", "D9r5", "D9r6"
              ]
 
-#filenames = ["D1r1_MO", "D1r2_MO", "D1r3_MO"]
+#filenames = ["D3r3"]
 
 for filename in filenames:
     print(filename)
@@ -54,6 +55,7 @@ for filename in filenames:
     
     print(first_timestamp)
     print(last_timestamp)
+    print(last_timestamp-first_timestamp)
     
     new_df = pd.DataFrame(columns=['UnixTimestamp', 'workload', 'vigilance', 'stress'])
 
@@ -82,7 +84,6 @@ for filename in filenames:
                     vig_lst[i] = vig_lst[i-1] 
         
             eeg_vig_av = mean(vig_lst)
-        
             eeg_stress_av = mean(ts_df['stress'].tolist())
         
         

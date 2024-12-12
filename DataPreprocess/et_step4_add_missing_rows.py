@@ -4,12 +4,13 @@ warnings.filterwarnings('ignore')
 import os
 #import sys
 
+import numpy as np
 import pandas as pd
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-INPUT_DIR = os.path.join(DATA_DIR, "EyeTracking2")
-OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking3")
+INPUT_DIR = os.path.join(DATA_DIR, "EyeTracking3")
+OUTPUT_DIR = os.path.join(DATA_DIR, "EyeTracking4")
 
 metrics_list = ['Saccade', 'Fixation', 'Blink',
                 'PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
@@ -35,30 +36,31 @@ metrics_sublist = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
 
 column_names = ['UnixTimestamp'] + ['SamplePerSecond'] + metrics_list
 
-filenames = ["D1r1_MO", "D1r2_MO", "D1r3_MO",
-             "D1r4_EI", "D1r5_EI", "D1r6_EI",
-             "D2r1_KV", "D2r2_KV",
-             "D2r4_UO", "D2r5_UO", "D2r6_UO",
-             "D3r1_KB", "D3r2_KB", "D3r3_KB",
-             "D3r4_PF", "D3r5_PF", "D3r6_PF",
-             "D4r1_AL", "D4r2_AL", "D4r3_AL",
-             "D4r4_IH", "D4r5_IH", "D4r6_IH",
-             "D5r1_RI", "D5r2_RI", "D5r3_RI",
-             "D5r4_JO", "D5r5_JO", "D5r6_JO",
-             "D6r1_AE", "D6r2_AE", "D6r3_AE",
-             "D6r4_HC", "D6r5_HC", "D6r6_HC",
-             "D7r1_LS", "D7r2_LS", "D7r3_LS",
-             "D7r4_ML", "D7r5_ML", "D7r6_ML",
-             "D8r1_AP", "D8r2_AP", "D8r3_AP",
-             "D8r4_AK", "D8r5_AK", "D8r6_AK",
-             "D9r1_RE", "D9r2_RE", "D9r3_RE",
-             "D9r4_SV", "D9r5_SV", "D9r6_SV"
+filenames = ["D1r1", "D1r2", "D1r3",
+             "D1r4", "D1r5", "D1r6",
+             "D2r1", "D2r2",
+             "D2r4", "D2r5", "D2r6",
+             "D3r1", "D3r2", "D3r3",
+             "D3r4", "D3r5", "D3r6",
+             "D4r1", "D4r2", "D4r3",
+             "D4r4", "D4r5", "D4r6",
+             "D5r1", "D5r2", "D5r3",
+             "D5r4", "D5r5", "D5r6",
+             "D6r1", "D6r2", "D6r3",
+             "D6r4", "D6r5", "D6r6",
+             "D7r1", "D7r2", "D7r3",
+             "D7r4", "D7r5", "D7r6",
+             "D8r1", "D8r2", "D8r3",
+             "D8r4", "D8r5", "D8r6",
+             "D9r1", "D9r2", "D9r3",
+             "D9r4", "D9r5", "D9r6"
              ]
 
 # for testing
-#filenames = ["D3r2_KB"]
+#filenames = ["D3r2"]
 
 for filename in filenames:
+    print(filename)
     full_filename = os.path.join(INPUT_DIR, "ET_" + filename +  ".csv")
     df = pd.read_csv(full_filename, sep=' ')
         
@@ -79,7 +81,7 @@ for filename in filenames:
             # add 250 rows            
             timestamp_lst = [ts]*250
             sample_per_second_lst = range(1,251)
-            metric_values_lst = [None]*250
+            metric_values_lst = [np.nan]*250
             
             df_to_add = pd.DataFrame()
             
@@ -100,7 +102,7 @@ for filename in filenames:
             # add num_to_add rows
             timestamp_lst = [ts]*num_to_add
             sample_per_second_lst = range(number_of_samples + 1, 251)
-            metric_values_lst = [None]*num_to_add
+            metric_values_lst = [np.nan]*num_to_add
             
             df_to_add = pd.DataFrame()
             
@@ -120,7 +122,7 @@ for filename in filenames:
 
     # Saccade, Fixation and Blinks: linear interpolation is performed for
     # statistical summary features on the next step
-    
+ 
     number_of_timestamps = last_timestamp - first_timestamp + 1
     number_of_rows1 = number_of_timestamps*250
     number_of_rows2 = len(new_df.index)

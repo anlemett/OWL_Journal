@@ -7,8 +7,7 @@ import numpy as np
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
-ET_DIR = os.path.join(DATA_DIR, "EyeTracking4")
-CH_DIR = os.path.join(DATA_DIR, "CH2")
+ET_DIR = os.path.join(DATA_DIR, "EyeTracking5")
 ML_DIR = os.path.join(DATA_DIR, "MLInput")
 
 WINDOW_SIZE = 250 * 180
@@ -33,8 +32,6 @@ features = [
             'HeadHeading', 'HeadPitch', 'HeadRoll'
             ]
 
-ATCOs = ['MO', 'EI', 'KV', 'UO', 'KB', 'PF', 'AL', 'IH', 'RI',
-         'JO', 'AE', 'HC', 'LS', 'ML', 'AP', 'AK', 'RE', 'SV']
 
 def get_TS_np(features):
     
@@ -57,17 +54,16 @@ def get_TS_np(features):
     et_df = pd.read_csv(full_filename, sep=' ')
     
     print("Reading CH data")
-    full_filename = os.path.join(CH_DIR, "CH_all.csv")
+    full_filename = os.path.join(ML_DIR, "ML_CH.csv")
     ch_df = pd.read_csv(full_filename, sep=' ')
     
     dim1_idx = 0
 
-    atco_num = 0
-    for atco in ATCOs:
-        print(atco)
-        atco_num = atco_num + 1
-        et_atco_df = et_df[et_df['ATCO']==atco]
-        ch_atco_df = ch_df[ch_df['ATCO']==atco]
+    for atco_num in range(1,19):
+        print(f"ATCO: {atco_num}")
+
+        et_atco_df = et_df[et_df['ATCO']==atco_num]
+        ch_atco_df = ch_df[ch_df['ATCO']==atco_num]
                 
         if et_atco_df.empty:
             continue
@@ -76,10 +72,17 @@ def get_TS_np(features):
             et_run_df = et_atco_df[et_atco_df['Run']==run]
             ch_run_df = ch_atco_df[ch_atco_df['Run']==run]
             
-            if et_run_df.empty:
+            if et_run_df.empty or ch_run_df.empty:
                 continue
-        
-            number_of_time_intervals = len(ch_run_df.index)
+            
+            number_of_et_time_intervals = max(et_run_df['timeInterval'].tolist())
+            print(f"Number of et time intervals: {number_of_et_time_intervals}")
+            
+            number_of_ch_time_intervals = max(ch_run_df['timeInterval'].tolist())
+            print(f"Number of ch time intervals: {number_of_ch_time_intervals}")
+            
+            number_of_time_intervals = min(number_of_ch_time_intervals, number_of_et_time_intervals)
+            print(f"Number of time intervals: {number_of_time_intervals}")
         
             run_TS_np = np.zeros(shape=(number_of_time_intervals, window_size, number_of_features))
             print(run_TS_np.shape)
@@ -91,7 +94,9 @@ def get_TS_np(features):
             for ti in range(1, number_of_time_intervals+1):
                 et_ti_df = et_run_df[et_run_df['timeInterval']==ti]
                                                
-                if et_ti_df.empty or all_run_scores[ti-1]==0:
+                if et_ti_df.empty:
+                    continue
+                if all_run_scores[ti-1]==0:
                     continue
                        
                 dim2_idx = 0
@@ -108,6 +113,8 @@ def get_TS_np(features):
             if dim1_idx < number_of_time_intervals:
                 run_TS_np = run_TS_np[:dim1_idx]
                 
+            print(run_TS_np.shape)
+            print(len(run_scores))
             TS_np = np.append(TS_np, run_TS_np, axis=0)
             all_scores.extend(run_scores)
 

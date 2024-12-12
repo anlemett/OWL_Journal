@@ -3,7 +3,8 @@ Steps order for CH ML:
 et_step1
 et_step2
 et_step3
-et_step4 (TIME_INTERVAL_DURATION = 180)
+et_step4
+et_step5 (TIME_INTERVAL_DURATION = 180)
 
 ch_step1
 
@@ -16,11 +17,11 @@ Steps order for EEG ML:
 et_step1
 et_step2
 et_step3
-et_step4 (TIME_INTERVAL_DURATION = 60)
+et_step4
+et_step5 (set TIME_INTERVAL_DURATION)
 
 eeg_step1
-eeg_step2 <- only if you want to normalize data per ATCO, + change Input folder in step 3
-eeg_step3
+eeg_step2
 
 ml_step1_2
-ml_step2 (TIME_INTERVAL_DURATION = 60)
+ml_step2 (set TIME_INTERVAL_DURATION)
