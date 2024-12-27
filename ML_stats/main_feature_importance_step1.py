@@ -14,18 +14,19 @@ import csv
 from scipy.stats import randint, uniform
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 #from collections import Counter
 from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold
 from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
+from permutation import RFEPermutationImportance
 
 from features import init, init_blinks, init_blinks_quantiles
 from features import init_blinks_no_head, init_blinks_no_head_quantiles
-from features import left, right, average
-from permutation import RFEPermutationImportance
+from features import left, right, left_right_unite
 
 #columns_to_select = init
 columns_to_select = init_blinks_no_head
@@ -41,17 +42,19 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 FIG_DIR = os.path.join(".", "Figures")
 
 RANDOM_STATE = 0
-PLOT = True
+PLOT = False
 
 CHS = True
 BINARY = True
 
-#MODEL = "SVC"
+LEFT_RIGHT_AVERAGE = True
+
+MODEL = "SVC"
 #MODEL = "RF"
-MODEL = "HGBC"
+#MODEL = "HGBC"
 
 N_ITER = 100
-N_SPLIT = 5
+N_SPLIT = 10
 SCORING = 'f1_macro'
 #SCORING = 'accuracy'
 
@@ -116,13 +119,15 @@ class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
         return X, y_transformed
 
 # Function to perform parameter tuning with RandomizedSearchCV on each training fold
-def model_with_tuning(pipeline, X_train, y_train):
+def model_with_tuning_stratified(pipeline, X_train, y_train):
     
     param_dist = get_param_dist()
     
+    stratified_kfold = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
+    
     # Initialize RandomizedSearchCV with pipeline, parameter distribution, and inner CV
     randomized_search = RandomizedSearchCV(
-        pipeline, param_dist, n_iter=N_ITER, cv=N_SPLIT, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE
+        pipeline, param_dist, n_iter=N_ITER, cv=stratified_kfold, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE
     )
     
     print("before randomized_search.fit")
@@ -133,93 +138,78 @@ def model_with_tuning(pipeline, X_train, y_train):
     # Return the best estimator found in this fold
     return randomized_search.best_estimator_
 
-
-# Cross-validation function that handles the pipeline
-def cross_val_with_label_transform(pipeline, X, y, cv):
-    accuracies = []
-    precisions = []
-    recalls = []
-    f1_scores = []
     
-    for i, (train_index, test_index) in enumerate(cv.split(X), start=1):
+# Cross-validation function that handles the pipeline and permutation importance
+def cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df, scores, cv, features):
+    
+    df = data_df
+    
+    X = df.to_numpy()
+    y = np.array(scores)
+    
+    pipeline.named_steps['label_transform'].fit(X, y)  # Fit to compute thresholds
+    _, y_transformed = pipeline.named_steps['label_transform'].transform(X, y)
+
+    # Set class weights to the classifier
+    pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+    
+    data_split = list(enumerate(cv.split(X, y_transformed), start=1))
+
+    features = features
+    removed_features = []
+    
+    # Determine feature importance
+    while(len(features)>1):
+      num_features=len(features)
+      print(f"Number of features: {num_features}")
+      
+      importances = [] #number of splits x number of features
+    
+      for i, (train_index, test_index) in data_split:
         
         print(f"Iteration {i}")
         
         X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
-        y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
-        
-        pipeline.named_steps['label_transform'].fit(X_train, y_train)  # Fit to compute thresholds
-        _, y_train_transformed = pipeline.named_steps['label_transform'].transform(X_train, y_train)
-        _, y_test_transformed = pipeline.named_steps['label_transform'].transform(X_test, y_test)
-        
-        # Set class weights to the classifier
-        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+        y_train_transformed, y_test_transformed = np.array(y_transformed)[train_index], np.array(y_transformed)[test_index]
         
         print("before model_with_tuning")
         # Get the best model after tuning on the current fold
-        best_model = model_with_tuning(pipeline, X_train, y_train_transformed)
+        best_model = model_with_tuning_stratified(pipeline, X_train, y_train_transformed)
         print("after model_with_tuning")
         
         # Fit the pipeline on transformed y_train
         best_model.fit(X_train, y_train_transformed)
         
-        # Predict the labels on the transformed test data
-        y_pred = best_model.predict(X_test)
         
-        # Calculate the metrics
-        accuracies.append(accuracy_score(y_test_transformed, y_pred))
-        precisions.append(precision_score(y_test_transformed, y_pred, average='macro', zero_division=0))
-        recalls.append(recall_score(y_test_transformed, y_pred, average='macro', zero_division=0))
-        f1_scores.append(f1_score(y_test_transformed, y_pred, average='macro', zero_division=0))
+        # Perform RFE with Permutation Importance
+        rfe = RFEPermutationImportance(best_model, min_features_to_select=num_features-1,
+                                       n_repeats=5)
         
-    # Print the results
-    print(f"Accuracy: {np.mean(accuracies):.4f} ± {np.std(accuracies):.4f}")
-    print(f"Precision: {np.mean(precisions):.4f} ± {np.std(precisions):.4f}")
-    print(f"Recall: {np.mean(recalls):.4f} ± {np.std(recalls):.4f}")
-    print(f"F1-Score: {np.mean(f1_scores):.4f} ± {np.std(f1_scores):.4f}")
+        rfe.fit(X_train, y_train_transformed, X_test, y_test_transformed, features)
+        importances.append(rfe.importances)
+      
+      #print(importances)
+      importances_np = np.array(importances)
+      # Calculate column sums
+      importances_sums = np.sum(importances_np, axis=0)
+           
+      min_importance_index = np.argmin(importances_sums)
+      removed_feature = features[min_importance_index]
+      removed_features.append(removed_feature)
+        
+      print(f"Removed feature: {removed_feature}")
+      
+      features = [s for s in features if s != removed_feature]
+      #print(features)
+      df = data_df[features]
+      #print(df.head(1))
+      X = df.to_numpy()
     
+    print(features) # the last feature (the most important)
+    removed_features.append(features[0])
+    print(removed_features)
 
-# Hold-out function that handles the pipeline
-def hold_out_with_label_transform(pipeline, X, y):
-
-    # Spit the data into train and test
-    rs = ShuffleSplit(n_splits=1, test_size=.1, random_state=RANDOM_STATE)
-    
-    for i, (train_idx, test_idx) in enumerate(rs.split(X)):
-        X_train = np.array(X)[train_idx.astype(int)]
-        y_train = np.array(y)[train_idx.astype(int)]
-        X_test = np.array(X)[test_idx.astype(int)]
-        y_test = np.array(y)[test_idx.astype(int)]
-        
-        pipeline.named_steps['label_transform'].fit(X_train, y_train)  # Fit to compute thresholds
-        _, y_train_transformed = pipeline.named_steps['label_transform'].transform(X_train, y_train)
-        _, y_test_transformed = pipeline.named_steps['label_transform'].transform(X_test, y_test)
-        
-        # Set class weights to the classifier
-        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
-
-        # Get the best model after tuning on the current fold
-        best_model = model_with_tuning(pipeline, X_train, y_train_transformed)
-        
-        # Fit the pipeline on transformed y_train
-        best_model.fit(X_train, y_train_transformed)
-        
-        # Predict the labels on the transformed test data
-        y_pred = best_model.predict(X_test)
-        
-        print("Shape at output after classification:", y_pred.shape)
-
-        accuracy = accuracy_score(y_pred=y_pred, y_true=y_test_transformed)
-        precision = precision_score(y_test_transformed, y_pred, average='macro', zero_division=0)
-        recall = recall_score(y_test_transformed, y_pred, average='macro', zero_division=0)
-        f1_macro = f1_score(y_pred=y_pred, y_true=y_test_transformed, average='macro')
-        
-        print("Accuracy:", accuracy)
-        print("Precision: ", precision)
-        print("Recall: ", recall)
-        print("Macro F1-score:", f1_macro)
-
-
+      
 ##############
 # Hold-out function that handles the pipeline and permutation importance
 def hold_out_with_label_transform_and_permutation(pipeline, X, y, features):
@@ -247,7 +237,7 @@ def hold_out_with_label_transform_and_permutation(pipeline, X, y, features):
         pipeline.named_steps['classifier'].set_params(class_weight='balanced')
 
         # Get the best model after tuning on the current fold
-        best_model = model_with_tuning(pipeline, X_train, y_train)
+        best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
 
         #######
         #X_df = pd.DataFrame(X, columns=features)
@@ -265,7 +255,7 @@ def hold_out_with_label_transform_and_permutation(pipeline, X, y, features):
         X_test = pd.DataFrame(X_test, columns=features)
         
         rfe.fit(X_train, y_train, X_test, y_test, features)
-    
+            
         # Store accuracies for plotting
         for num_features, accuracy in rfe.accuracies_:
             acc_num_features_list.append(num_features)
@@ -398,7 +388,8 @@ def hold_out_with_label_transform_and_permutation(pipeline, X, y, features):
         f1 = test_f1_scores[max_index]
         print("Optimal number of features by maximizing F1-score")
         print(f"Optimal number of features: {number_of_features}, Accuracy: {acc}, F1-score: {f1}, ")
-        
+    
+
 ##############        
    
 def get_model():
@@ -414,7 +405,7 @@ def get_param_dist():
     if MODEL == "SVC":
         param_dist = {
             'classifier__C': uniform(loc=0, scale=10),  # Regularization parameter
-            'classifier__kernel': ['linear', 'poly', 'rbf', 'sigmoid'],  # Kernel type
+            'classifier__kernel': ['linear', 'rbf', 'sigmoid'],  # Kernel type
             'classifier__gamma': ['scale', 'auto'],  # Kernel coefficient
             'classifier__degree': randint(1, 10)  # Degree of polynomial kernel
             }
@@ -459,14 +450,6 @@ def main():
        
     data_df = data_df[['ATCO'] + columns_to_select]
     
-    for i in range(0,17):
-        
-        col1 =  left[i]
-        col2 = right[i]
-        
-        data_df[average[i]] = (data_df[col1] + data_df[col2])/2
-        data_df = data_df.drop([col1, col2], axis=1)
-    
             
     if CHS:
         print("CHS")
@@ -496,22 +479,19 @@ def main():
     scores = data_df['score'].to_list()
     data_df = data_df.drop('score', axis=1)
     
+    if LEFT_RIGHT_AVERAGE:
+        for i in range(0,17):
+            
+            col1 =  left[i]
+            col2 = right[i]
+            
+            data_df[left_right_unite[i]] = (data_df[col1] + data_df[col2])/2
+            data_df = data_df.drop([col1, col2], axis=1)
+    
     features = data_df.columns
     
     print(f"Number of features: {len(features)}")
-    
-    X = data_df.to_numpy()
-    y = np.array(scores)
-    
-    zipped = list(zip(X, y))
-    
-    np.random.shuffle(zipped)
-    
-    X, y = zip(*zipped)
-    
-    X = np.array(X)
-    y = np.array(y)
-    
+            
     pipeline = Pipeline([
             # Step 1: Standardize features
             ('scaler', StandardScaler()),
@@ -523,11 +503,10 @@ def main():
     
     
     # Initialize the cross-validation splitter
-    #outer_cv = KFold(n_splits=10, shuffle=True, random_state=RANDOM_STATE)
-    #cross_val_with_label_transform(pipeline, X, y, cv=outer_cv)
+    outer_cv = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
+    cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df, scores, outer_cv, features)
     
-    #hold_out_with_label_transform(pipeline, X, y)
-    hold_out_with_label_transform_and_permutation(pipeline, X, y, features)
+    #hold_out_with_label_transform_and_permutation(pipeline, X, y, features)
         
     print(f"Number of slots: {len(data_df.index)}")
 

@@ -16,6 +16,7 @@ from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassif
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import balanced_accuracy_score, jaccard_score, average_precision_score
+from sklearn.metrics import confusion_matrix
 #from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -41,16 +42,13 @@ from imblearn.combine import SMOTEENN
 from imblearn.combine import  SMOTETomek
 from imblearn.pipeline import Pipeline
 
-from features import init_blinks_no_head, init_blinks_quantiles
-from features import init, init_blinks, blinks
-from features import left, right, left_right, left_right_unite
+from features import init_blinks_no_head
+from features import init, init_blinks
+from features import left, right, average
 
 #columns_to_select = init
 #columns_to_select = init_blinks
-#columns_to_select = init_blinks_no_head
-columns_to_select = left_right
-#columns_to_select = blinks
-#columns_to_select = init_blinks_quantiles
+columns_to_select = init_blinks_no_head
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -58,24 +56,26 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 #ML_DIR = os.path.join(DATA_DIR, "MLInput_Journal")
 FIG_DIR = os.path.join(".", "Figures")
 RANDOM_STATE = 0
-CHS = True
+CHS = False
 BINARY = True
 
-RANDOM_SEARCH = True
+#SUBJECT_SPECIFIC = True
+ATCO = 3
 
-LEFT_RIGHT_AVERAGE = True
-LEFT_RIGHT_DIFF = False
-LEFT_RIGHT_DROP = False
+RANDOM_SEARCH = False
 
-#Lasso, Ridge, or ElasticNet (models with built-in regularization)?
+LEFT_RIGHT_AVERAGE = False
+
 #MODEL = "LGBM"
-MODEL = "SVC"
+#MODEL = "SVC"
 #MODEL = "RF"
 #MODEL = "BRF"
 #MODEL = "EEC"
-#MODEL = "HGBC"
+MODEL = "HGBC"
 
+#BOOTSTRAP = False
 N_ITER = 100
+# Parameters for validation
 N_SPLIT = 10
 SCORING = 'f1_macro'
 #SCORING = make_scorer(average_precision_score)
@@ -87,10 +87,10 @@ SCORING = 'f1_macro'
 
 
 #TIME_INTERVAL_DURATION = 300
-TIME_INTERVAL_DURATION = 180
+#TIME_INTERVAL_DURATION = 180
 #TIME_INTERVAL_DURATION = 60
 #TIME_INTERVAL_DURATION = 30
-#TIME_INTERVAL_DURATION = 10
+TIME_INTERVAL_DURATION = 10
 
 class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, percentiles=None):
@@ -133,8 +133,8 @@ class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
 
 def calculate_classwise_accuracies(y_pred, y_true):
     
-    print(f"y_pred: {y_pred}")
-    print(f"y_true: {y_true}")
+    #print(f"y_pred: {y_pred}")
+    #print(f"y_true: {y_true}")
     
     y_pred_np = np.array(y_pred)
     y_true_np = np.array(y_true)
@@ -172,8 +172,9 @@ def calculate_classwise_accuracies(y_pred, y_true):
 
 
 # Function to perform parameter tuning with RandomizedSearchCV on each training fold
-def model_with_tuning_stratified(pipeline, X_train, y_train):
+def model_with_tuning(pipeline, X_train, y_train):
     
+    #if not SUBJECT_SPECIFIC:
     #if MODEL != "EEC":
     #    pipeline.named_steps['classifier'].set_params(class_weight='balanced')
     
@@ -182,14 +183,21 @@ def model_with_tuning_stratified(pipeline, X_train, y_train):
     stratified_kfold = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
     
     if RANDOM_SEARCH:
-        search = RandomizedSearchCV(pipeline, params, n_iter=N_ITER, cv=stratified_kfold, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE)
-        #search = RandomizedSearchCV(pipeline, params, n_iter=N_ITER, cv=N_SPLIT, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE)
+        #search = RandomizedSearchCV(pipeline, params, n_iter=N_ITER, cv=stratified_kfold, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE)
+        search = RandomizedSearchCV(pipeline, params, n_iter=N_ITER, cv=N_SPLIT, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE)
     else:
         search = GridSearchCV(estimator=pipeline, param_grid=params, scoring=SCORING, cv=stratified_kfold, n_jobs=-1)
     
     # Fit on the training data for this fold
     search.fit(X_train, y_train)
-    
+    '''
+    if SUBJECT_SPECIFIC:
+        # Extract SMOTE-transformed training data
+        smote = pipeline.named_steps['smote']
+        _, y_resampled = smote.fit_resample(X_train, y_train)
+
+        print("Resampled y_train:", y_resampled)
+    '''
     print("Best Parameters:", search.best_params_)
     
     # Return the best estimator found in this fold
@@ -217,7 +225,7 @@ def leave_one_out_with_label_transform(pipeline, X, y):
         #if y_test!=2:
         #    continue
         
-        print(f"y_train: {y_train}, y_test: {y_test}")
+        #print(f"y_train: {y_train}, y_test: {y_test}")
         
         # Apply SMOTE to oversample the minority class
         #smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=1)
@@ -225,7 +233,7 @@ def leave_one_out_with_label_transform(pipeline, X, y):
         
         print("before model_with_tuning")
         # Get the best model after tuning on the current fold
-        best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
+        best_model = model_with_tuning(pipeline, X_train, y_train)
         print("after model_with_tuning")
         
         # Fit the pipeline on transformed y_train
@@ -238,7 +246,7 @@ def leave_one_out_with_label_transform(pipeline, X, y):
         if y_pred != y_test:
             print(f"Prediction mismatch for test sample {test_index}, redoing training...")
         
-            X_train, y_train = shuffle(X_train, y_train, random_state=RANDOM_STATE)
+            X_train, y_train = shuffle(X_train, y_train, random_state=RANDOM_STATE+1)
             # Fit the pipeline on transformed y_train
             best_model.fit(X_train, y_train)
             
@@ -248,8 +256,8 @@ def leave_one_out_with_label_transform(pipeline, X, y):
         y_pred_lst.append(y_pred[0])
         y_true_lst.append(y_test[0])
         
-    print(y_true_lst)
-    print(y_pred_lst)
+    #print(y_true_lst)
+    #print(y_pred_lst)
     
     # Evaluate performance
     accuracy = accuracy_score(y_true_lst, y_pred_lst)
@@ -270,7 +278,52 @@ def leave_one_out_with_label_transform(pipeline, X, y):
     
     y_true_np = np.array(y_true_lst)
     y_pred_np = np.array(y_pred_lst)
-    print(y_true_np == y_pred_np)
+    #print(y_true_np == y_pred_np)
+    
+    
+# Cross-validation function that handles the pipeline
+def cross_val_with_label_transform(pipeline, X, y, cv):
+    accuracies = []
+    precisions = []
+    recalls = []
+    f1_scores = []
+    
+    for i, (train_index, test_index) in enumerate(cv.split(X), start=1):
+        
+        print(f"Iteration {i}")
+        
+        X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
+        y_train, y_test = np.array(y)[train_index], np.array(y)[test_index]
+        
+        pipeline.named_steps['label_transform'].fit(X_train, y_train)  # Fit to compute thresholds
+        _, y_train_transformed = pipeline.named_steps['label_transform'].transform(X_train, y_train)
+        _, y_test_transformed = pipeline.named_steps['label_transform'].transform(X_test, y_test)
+        
+        # Set class weights to the classifier
+        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+        
+        print("before model_with_tuning")
+        # Get the best model after tuning on the current fold
+        best_model = model_with_tuning(pipeline, X_train, y_train_transformed)
+        print("after model_with_tuning")
+        
+        # Fit the pipeline on transformed y_train
+        best_model.fit(X_train, y_train_transformed)
+        
+        # Predict the labels on the transformed test data
+        y_pred = best_model.predict(X_test)
+        
+        # Calculate the metrics
+        accuracies.append(accuracy_score(y_test_transformed, y_pred))
+        precisions.append(precision_score(y_test_transformed, y_pred, average='macro', zero_division=0))
+        recalls.append(recall_score(y_test_transformed, y_pred, average='macro', zero_division=0))
+        f1_scores.append(f1_score(y_test_transformed, y_pred, average='macro', zero_division=0))
+        
+    # Print the results
+    print(f"Accuracy: {np.mean(accuracies):.4f} ± {np.std(accuracies):.4f}")
+    print(f"Precision: {np.mean(precisions):.4f} ± {np.std(precisions):.4f}")
+    print(f"Recall: {np.mean(recalls):.4f} ± {np.std(recalls):.4f}")
+    print(f"F1-Score: {np.mean(f1_scores):.4f} ± {np.std(f1_scores):.4f}")
     
 
 # Stratified cross-validation function that handles the pipeline
@@ -285,9 +338,12 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
     pipeline.named_steps['label_transform'].fit(X, y)  # Fit to compute thresholds
     _, y_transformed = pipeline.named_steps['label_transform'].transform(X, y)
 
+    
     for i, (train_index, test_index) in enumerate(cv.split(X, y_transformed), start=1):
         
         print(f"Iteration {i}")
+        #if (i!=1) and (i!=9) and (i!=10):
+        #    continue
         
         X_train, X_test = np.array(X)[train_index], np.array(X)[test_index]
         y_train, y_test = np.array(y_transformed)[train_index], np.array(y_transformed)[test_index]
@@ -300,7 +356,7 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         
         #print("before model_with_tuning")
         # Get the best model after tuning on the current fold
-        best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
+        best_model = model_with_tuning(pipeline, X_train, y_train)
         #print("after model_with_tuning")
         
         # Fit the pipeline on transformed y_train
@@ -312,6 +368,11 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         print(y_test)
         print(y_pred)
         
+        cm = confusion_matrix(y_test, y_pred, labels=[2, 1])
+        print("Confusion Matrix:")
+        print(cm)
+
+        
         # Calculate the metrics
         accuracies.append(accuracy_score(y_test, y_pred))
         bal_accuracies.append(balanced_accuracy_score(y_test, y_pred))
@@ -320,7 +381,7 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         recalls.append(recall_score(y_test, y_pred, average='macro', zero_division=0))
         f1_scores.append(f1_score(y_test, y_pred, average='macro', zero_division=0))
     
-    
+        
     print(f"Accuracy: {np.mean(accuracies):.2f} ± {np.std(accuracies):.2f}")
     print(f"Balanced accuracy: {np.mean(bal_accuracies):.2f} ± {np.std(bal_accuracies):.2f}")
     class1_values = [sublist[0] for sublist in c_w_accuracies if not math.isnan(sublist[0])]
@@ -330,10 +391,50 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
     print(f"Precision: {np.mean(precisions):.2f} ± {np.std(precisions):.2f}")
     print(f"Recall: {np.mean(recalls):.2f} ± {np.std(recalls):.2f}")
     print(f"F1-Score: {np.mean(f1_scores):.2f} ± {np.std(f1_scores):.2f}")
-    
-    print(bal_accuracies)
     print(f1_scores)
 
+
+# Hold-out function that handles the pipeline
+def hold_out_with_label_transform(pipeline, X, y):
+    
+    # Spit the data into train and test
+    ss = ShuffleSplit(n_splits=1, test_size=.1, random_state=RANDOM_STATE)
+    
+    for i, (train_idx, test_idx) in enumerate(ss.split(X,y)):
+        X_train = np.array(X)[train_idx.astype(int)]
+        y_train = np.array(y)[train_idx.astype(int)]
+        X_test = np.array(X)[test_idx.astype(int)]
+        y_test = np.array(y)[test_idx.astype(int)]
+        
+        pipeline.named_steps['label_transform'].fit(X_train, y_train)  # Fit to compute thresholds
+        _, y_train_transformed = pipeline.named_steps['label_transform'].transform(X_train, y_train)
+        _, y_test_transformed = pipeline.named_steps['label_transform'].transform(X_test, y_test)
+        
+        # Set class weights to the classifier
+        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+
+        # Get the best model after tuning on the current fold
+        best_model = model_with_tuning(pipeline, X_train, y_train_transformed)
+        
+        # Fit the pipeline on transformed y_train
+        best_model.fit(X_train, y_train_transformed)
+        
+        # Predict the labels on the transformed test data
+        y_pred = best_model.predict(X_test)
+        
+        #print("Shape at output after classification:", y_pred.shape)
+        print(f"y_pred: {y_pred}")
+        print(f"y_true: {y_test}")
+
+        accuracy = accuracy_score(y_pred=y_pred, y_true=y_test_transformed)
+        precision = precision_score(y_test_transformed, y_pred, average='macro', zero_division=0)
+        recall = recall_score(y_test_transformed, y_pred, average='macro', zero_division=0)
+        f1_macro = f1_score(y_pred=y_pred, y_true=y_test_transformed, average='macro')
+        
+        print("Accuracy:", accuracy)
+        print("Precision: ", precision)
+        print("Recall: ", recall)
+        print("Macro F1-score:", f1_macro)
         
 # Hold-out function with stratified split that handles the pipeline
 def hold_out_stratified_with_label_transform(pipeline, X, y):
@@ -373,7 +474,7 @@ def hold_out_stratified_with_label_transform(pipeline, X, y):
         pipeline.named_steps['classifier'].set_params(class_weight='balanced')
 
         # Get the best model after tuning on the current fold
-        best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
+        best_model = model_with_tuning(pipeline, X_train, y_train)
         
         # Fit the pipeline on transformed y_train
         best_model.fit(X_train, y_train)
@@ -473,25 +574,102 @@ def get_params():
                 #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
                 #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
                 }
-            '''
-            if LEFT_RIGHT_AVERAGE:
-                params_grid = {
-                    'classifier__C': [1, 5, 10],
-                    #'classifier__kernel': ['linear', 'rbf', 'sigmoid', 'poly'],
-                    'classifier__kernel': ['rbf'],
-                    'classifier__gamma': [0.01, 'scale'],
-                    #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
-                    #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
-                    }
+            
+            params_grid = {
+                'classifier__C': [0.001, 0.01, 1, 5, 10, 100],
+                #'classifier__kernel': ['linear', 'rbf', 'sigmoid', 'poly'],
+                'classifier__kernel': ['linear', 'rbf'],
+                'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100, 'scale', 'auto'],
+                #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
+                #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
+                }
+            
+            params_set1 = {
+                'classifier__C': [0.1],
+                'classifier__kernel': ['linear'],
+                }
+            
+            params_set2 = {
+                'classifier__C': [5],
+                #'classifier__degree': [6],
+                'classifier__kernel': ['sigmoid'],
+                'classifier__gamma': ['scale'],
+                }
+            
+            params_set3 = {
+                'classifier__C': [0.001, 0.01, 1],
+                'classifier__kernel': ['linear', 'rbf'],
+                'classifier__gamma': ['scale'],
+                }
+            
+            params_set4 = {
+                'classifier__C': [1],
+                #'classifier__degree': [5],
+                'classifier__kernel': ['sigmoid', 'rbf'],
+                'classifier__gamma': ['auto'],
+                }
+            
+            params_set5 = {
+                'classifier__C': [5],
+                #'classifier__degree': [5],
+                'classifier__kernel': ['sigmoid', 'rbf'],
+                'classifier__gamma': ['scale'],
+                }
+            
+            params_set6 = {
+                'classifier__C': [0.001],
+                'classifier__kernel': ['linear', 'rbf'],
+                'classifier__gamma': [0.001, 0.1],
+                }
+            
+            params_set7 = {
+                'classifier__C': [0.001, 0.01, 1, 10, 100],
+                'classifier__kernel': ['linear', 'rbf', 'sigmoid', 'poly'],
+                'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100],
+                'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
+                'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
+                #'classifier__tol': [0.0001],
+                }
+            params_set8 = {
+                'classifier__C': [ 548.8, 602.7],
+                'classifier__kernel': ['linear', 'rbf'],
+                'classifier__gamma': ['auto'],
+                #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
+                #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
+                #'classifier__tol': [0.0001],
+                }
+            if SUBJECT_SPECIFIC:
+                if ATCO in [5]: # only 5
+                    params = params_set1
+                elif ATCO in [4]:
+                    params = params_set2
+                elif ATCO in [10]:
+                    params = params_set3
+                elif ATCO in [7, 9, 11, 12]: # 1,2
+                    params = params_set4
+                elif ATCO in [6, 13, 14, 18]:
+                    params = params_set5
+                elif ATCO in [2, 8, 17]: # 1,2
+                    params = params_set6
+                elif ATCO in [1, 13]:
+                    params = params_set7
+                elif ATCO in [0]:
+                    params = params_set8
+                else:
+                    print(f"ATCO{ATCO} is not supported")
+                    sys.exit(0)
+                
             else:
-                params_grid = {
-                    'classifier__C': [0.001, 0.01, 1, 5, 10, 100],
-                    #'classifier__kernel': ['linear', 'rbf', 'sigmoid', 'poly'],
-                    'classifier__kernel': ['linear', 'rbf'],
-                    'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100, 'scale', 'auto'],
-                    #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
-                    #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
-                    }
+                params = params_grid
+            '''
+            params_grid = {
+                'classifier__C': [0.001, 0.01, 1, 5, 10, 100],
+                #'classifier__kernel': ['linear', 'rbf', 'sigmoid', 'poly'],
+                'classifier__kernel': ['linear', 'rbf'],
+                'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100, 'scale', 'auto'],
+                #'classifier__coef0': [-5, -3, -1, 0, 1, 3, 5], # sigmoid
+                #'classifier__degree': [1, 2, 3, 4, 5, 6]  # Degree of polynomial kernel
+                }
             
             params = params_grid
 
@@ -507,14 +685,26 @@ def get_params():
                 }
         else:
             params_grid = {
-                'classifier__n_estimators': [50, 55, 350, 450],
-                'classifier__max_depth': [3],
-                'classifier__min_samples_leaf': [3,5],
-                'classifier__max_features': ['sqrt', 'log2'],
-                'classifier__criterion': ['gini', 'entropy']
+                'classifier__n_estimators': [1, 5, 200, 500],
+                'classifier__max_depth': [None, 1, 10, 79],
                 }
             
-            params = params_grid
+            params_set1 = {
+                'classifier__n_estimators': [200],
+                'classifier__max_depth': [None, 1],
+                }
+            
+            params_set2 = {
+                'classifier__n_estimators': [1, 5,],
+                'classifier__max_depth': [1, 10],
+                }
+            
+            if ATCO in [1, 5, 6, 8, 9, 10, 12, 13, 18]:
+                params = params_set1
+            elif ATCO in [2, 4, 6, 7, 11, 14, 17]:
+                params = params_set2
+            else:
+                params = params_grid
     
     elif MODEL == "EEC":
         if RANDOM_SEARCH:
@@ -529,31 +719,75 @@ def get_params():
     else: #HGBC
         
         if RANDOM_SEARCH:
-            '''
             params = {
                 'classifier__max_depth': randint(1,79),
                 }
-            '''
-            '''
-            params = {
-                'classifier__max_depth': [None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],              # Maximum depth of trees
-                'classifier__l2_regularization': [0.00078, 0.0167, 0.129, 0.359, 1.0]
-                }
-            '''
-            params = {
-                #'classifier__learning_rate': np.logspace(-3, 0, 10),   # Learning rate between 0.001 and 1
-                #'classifier__max_iter': [None, 50, 100, 200, 300],           # Number of boosting iterations
-                'classifier__max_depth': [None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],              # Maximum depth of trees
-                #'classifier__min_samples_leaf': [10, 20, 30],          # Minimum number of samples per leaf
-                #'classifier__l2_regularization': np.logspace(-4, 0, 10)  # L2 regularization strength
-                'classifier__l2_regularization': [0.00078, 0.0167, 0.129, 0.359, 1.0]
-                }
         else:
-            params =  {
-                'classifier__max_depth': [None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],              # Maximum depth of trees
-                'classifier__l2_regularization': [0.00078, 0.0167, 0.129, 0.359, 1.0]
+            '''
+            shared_params = {
+                # Maximum number of iterations (trees) to fit
+                'classifier__max_iter': [100],
+                # Maximum number of bins used for splitting
+                'classifier__max_bins': [255],
+                # Maximum depth of trees
+                'classifier__max_depth': [None],
+                # Maximum number of leaf nodes
+                'classifier__max_leaf_nodes': [None],
+                # L2 regularization parameter
+                'classifier__l2_regularization': [0.0],
+                # Number of iterations to wait before early stopping
+                'classifier__n_iter_no_change': [1],
+                # Scoring metric for early stopping
+                'classifier__scoring': ['f1'],
                 }
-
+            
+            params_grid = {
+                'classifier__learning_rate': [0.01, 0.1],
+                'classifier__min_samples_leaf': [1, 20, 40],
+                'classifier__early_stopping': ['auto', True],
+                }
+            combined_params_grid = {**shared_params, **params_grid}
+            
+            params_set1 = {
+                'classifier__learning_rate': [0.1],
+                'classifier__min_samples_leaf': [20],
+                'classifier__early_stopping': ['auto'],
+                }
+            combined_params_set1 = {**shared_params, **params_set1}
+            
+            params_set2 = {
+                'classifier__learning_rate': [0.01],
+                'classifier__min_samples_leaf': [40],
+                'classifier__early_stopping': ['auto'],
+                }
+            combined_params_set2 = {**shared_params, **params_set2}
+            
+            params_set3 = {
+                'classifier__learning_rate': [0.01],
+                'classifier__min_samples_leaf': [1],
+                'classifier__early_stopping': [True],
+                }
+            combined_params_set3 = {**shared_params, **params_set3}
+            
+            if SUBJECT_SPECIFIC:
+                if ATCO == 0: #1
+                    params = combined_params_set1
+                elif ATCO in [2, 4, 12, 14, 18]:
+                    params = combined_params_set2
+                elif ATCO in [1, 5, 6, 7, 8, 9, 10, 11, 13, 17]:
+                    params = combined_params_set3
+                else:
+                    print(f"ATCO{ATCO} is not supported")
+                    sys.exit(0)
+            else:
+            
+            params = combined_params_grid
+            '''
+            params =  {
+                    'classifier__max_depth': [None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],              # Maximum depth of trees
+                    'classifier__l2_regularization': [0.00078, 0.0167, 0.129, 0.359, 1.0]
+                    }
+            
     return params
 
 
@@ -604,7 +838,9 @@ def main():
     
     ###########################################################################
     
-    print(f"Number of slots: {len(data_df.index)}")
+    orig_num_slots = len(data_df.index)
+    
+    data_df = data_df[data_df['ATCO']==ATCO]
     
     data_df = data_df.drop('ATCO', axis=1)
     
@@ -614,37 +850,15 @@ def main():
             col1 =  left[i]
             col2 = right[i]
             
-            data_df[left_right_unite[i]] = (data_df[col1] + data_df[col2])/2
+            data_df[average[i]] = (data_df[col1] + data_df[col2])/2
             data_df = data_df.drop([col1, col2], axis=1)
     
-    if LEFT_RIGHT_DIFF:
-        for i in range(0,17):
-            
-            col1 =  left[i]
-            col2 = right[i]
-            
-            data_df[left_right_unite[i]] = abs((data_df[col1] - data_df[col2]))
-            data_df = data_df.drop([col1, col2], axis=1)
-            
-    if LEFT_RIGHT_DROP:
-        for i in range(0,17):
-            
-            col1 =  left[i]
-            col2 = right[i]
-            
-            data_df = data_df.drop([col1, col2], axis=1)
-    
-            
+
     scores = data_df['score'].to_list()
     data_df = data_df.drop('score', axis=1)
     
     features = data_df.columns
     print(f"Number of features: {len(features)}")
-    
-    ###########
-    features = ['Blink Opening Amplitude Max']
-    data_df = data_df[features]
-    ###########
     
     X = data_df.to_numpy()
     y = np.array(scores)
@@ -663,27 +877,16 @@ def main():
                 ('scaler', StandardScaler()),
                 # Custom label transformation step
                 ('label_transform', ThresholdLabelTransformer(get_percentiles())),
-                # Oversampling step
-                #('smote', SMOTE(random_state=RANDOM_STATE, k_neighbors=1)),
                 #('smote', BorderlineSMOTE(random_state=RANDOM_STATE, k_neighbors=1)),
-                #('smote', ADASYN(random_state=RANDOM_STATE, n_neighbors=1)),
-                #('smote', SMOTETomek(smote=SMOTE(k_neighbors=1), random_state=RANDOM_STATE)),
-                #('smote', SMOTEENN(smote=SMOTE(k_neighbors=1), random_state=RANDOM_STATE)),
-
                 # Model setting step
                 ('classifier', get_model())
                 ])
 
-    # Initialize the cross-validation splitter
-    #outer_cv = KFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
-    #cross_val_with_label_transform(pipeline, X, y, cv=outer_cv)
-    
     outer_cv = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
     cross_val_stratified_with_label_transform(pipeline, X, y, cv=outer_cv)
     
-    #hold_out_with_label_transform(pipeline, X, y)
-        
-    #hold_out_stratified_with_label_transform(pipeline, X, y)
+    print(f"Number of slots: {len(data_df.index)}")
+    print(f"Original number of slots: {orig_num_slots}")
 
 
 start_time = time.time()
