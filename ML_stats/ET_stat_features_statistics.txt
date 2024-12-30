@@ -1,0 +1,106 @@
+Column Statistics:
+                                                 Mean  Standard Deviation
+ATCO                                         9.593703            5.136119
+Saccades Number                           1597.026987          946.993711
+Saccades Duration Mean                       7.560302            1.349299
+Saccades Duration Std                        7.562952            1.365529
+Saccades Duration Median                     5.057721            1.171501
+Saccades Duration Quantile25                 2.827586            0.594548
+Saccades Duration Quantile75                 2.827586            0.594548
+Saccades Duration Max                       68.241379           18.175906
+Fixation Duration Mean                      30.016774           24.537119
+Fixation Duration Std                       60.594745           42.918518
+Fixation Duration Median                     8.189655           12.631130
+Fixation Duration Quantile25                 1.649175            2.602344
+Fixation Duration Quantile75                 1.649175            2.602344
+Fixation Duration Max                      720.446777          467.810812
+Blinks Number                               36.229385           26.405645
+Blinks Duration Mean                        83.637818           14.417300
+Blinks Duration Std                         17.444686            6.361664
+Blinks Duration Median                      81.001499           14.577380
+Blinks Duration Quantile25                  71.376312           11.829077
+Blinks Duration Quantile75                  71.376312           11.829077
+Blinks Duration Min                         56.046477           11.840377
+Blinks Duration Max                        128.469265           25.855864
+PupilDiameter Mean                           0.003219            0.000751
+Left Pupil Diameter Mean                     0.003392            0.000715
+Right Pupil Diameter Mean                    0.003077            0.000841
+Left Blink Closing Amplitude Mean            0.000007            0.000006
+Left Blink Opening Amplitude Mean            0.000006            0.000005
+Left Blink Closing Speed Mean                0.000476            0.000365
+Left Blink Opening Speed Mean                0.000156            0.000119
+Right Blink Closing Amplitude Mean           0.000006            0.000005
+Right Blink Opening Amplitude Mean           0.000006            0.000005
+Right Blink Closing Speed Mean               0.000467            0.000359
+Right Blink Opening Speed Mean               0.000152            0.000117
+Head Heading Mean                            0.341417            1.795486
+Head Pitch Mean                             -0.015762            0.069262
+Head Roll Mean                              -0.011177            0.061105
+PupilDiameter Std                            0.000494            0.000257
+Left Pupil Diameter Std                      0.000507            0.000236
+Right Pupil Diameter Std                     0.000568            0.000273
+Left Blink Closing Amplitude Std             0.000221            0.000096
+Left Blink Opening Amplitude Std             0.000207            0.000089
+Left Blink Closing Speed Std                 0.016042            0.005998
+Left Blink Opening Speed Std                 0.005241            0.001957
+Right Blink Closing Amplitude Std            0.000212            0.000090
+Right Blink Opening Amplitude Std            0.000200            0.000084
+Right Blink Closing Speed Std                0.015874            0.005956
+Right Blink Opening Speed Std                0.005183            0.001944
+Head Heading Std                             2.311495            0.755136
+Head Pitch Std                               0.066873            0.029299
+Head Roll Std                                0.058169            0.035030
+PupilDiameter Median                         0.003287            0.000777
+Left Pupil Diameter Median                   0.003467            0.000737
+Right Pupil Diameter Median                  0.003133            0.000898
+Head Heading Median                          0.546212            2.964669
+Head Pitch Median                           -0.009839            0.071951
+Head Roll Median                            -0.012594            0.067586
+PupilDiameter Quantile25                     0.003021            0.000846
+Left Pupil Diameter Quantile25               0.003209            0.000828
+Right Pupil Diameter Quantile25              0.002815            0.000967
+Left Blink Closing Amplitude Quantile25      0.000000            0.000000
+Left Blink Opening Amplitude Quantile25      0.000000            0.000000
+Left Blink Closing Speed Quantile25          0.000000            0.000000
+Left Blink Opening Speed Quantile25          0.000000            0.000000
+Right Blink Closing Amplitude Quantile25     0.000000            0.000000
+Right Blink Opening Amplitude Quantile25     0.000000            0.000000
+Right Blink Closing Speed Quantile25         0.000000            0.000000
+Right Blink Opening Speed Quantile25         0.000000            0.000000
+Head Heading Quantile25                     -1.084908            2.819947
+Head Pitch Quantile25                       -0.048007            0.076941
+Head Roll Quantile25                        -0.044525            0.071688
+PupilDiameter Quantile75                     0.003500            0.000722
+Left Pupil Diameter Quantile75               0.003670            0.000663
+Right Pupil Diameter Quantile75              0.003407            0.000825
+Left Blink Closing Amplitude Quantile75      0.000000            0.000000
+Left Blink Opening Amplitude Quantile75      0.000000            0.000000
+Left Blink Closing Speed Quantile75          0.000000            0.000000
+Left Blink Opening Speed Quantile75          0.000000            0.000000
+Right Blink Closing Amplitude Quantile75     0.000000            0.000000
+Right Blink Opening Amplitude Quantile75     0.000000            0.000000
+Right Blink Closing Speed Quantile75         0.000000            0.000000
+Right Blink Opening Speed Quantile75         0.000000            0.000000
+Head Heading Quantile75                      1.881712            2.394538
+Head Pitch Quantile75                        0.024700            0.069309
+Head Roll Quantile75                         0.021852            0.066949
+PupilDiameter Min                            0.000732            0.000484
+Left Pupil Diameter Min                      0.000674            0.000521
+Right Pupil Diameter Min                     0.000551            0.000358
+Head Heading Min                            -3.123167            0.331179
+Head Pitch Min                              -0.324032            0.153965
+Head Roll Min                               -0.253335            0.153060
+PupilDiameter Max                            0.006349            0.005815
+Left Pupil Diameter Max                      0.006672            0.007327
+Right Pupil Diameter Max                     0.006314            0.006025
+Left Blink Closing Amplitude Max             0.010433            0.001466
+Left Blink Opening Amplitude Max             0.010029            0.001399
+Left Blink Closing Speed Max                 0.671143            0.070507
+Left Blink Opening Speed Max                 0.219397            0.018344
+Right Blink Closing Amplitude Max            0.010231            0.001607
+Right Blink Opening Amplitude Max            0.009792            0.001527
+Right Blink Closing Speed Max                0.666533            0.058021
+Right Blink Opening Speed Max                0.218170            0.019170
+Head Heading Max                             3.102067            0.431571
+Head Pitch Max                               0.201908            0.140147
+Head Roll Max                                0.260469            0.188732

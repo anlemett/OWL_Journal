@@ -27,10 +27,14 @@ from permutation import RFEPermutationImportance
 
 from features import init_blinks_no_head
 from features import left, right, left_right_unite
-from features import CHS_binary_importance
+from features import importance_CHS_binary_SVC, importance_CHS_binary_HGBC
+from features import importance_CHS_3cl_SVC, importance_CHS_3cl_HGBC
 
 columns_to_select = init_blinks_no_head
-columns_order = CHS_binary_importance
+#columns_order = importance_CHS_binary_SVC
+#columns_order = importance_CHS_binary_HGBC
+columns_order = importance_CHS_3cl_SVC
+#columns_order = importance_CHS_3cl_HGBC
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -42,7 +46,7 @@ RANDOM_STATE = 0
 PLOT = False
 
 CHS = True
-BINARY = True
+BINARY = False
 
 LEFT_RIGHT_AVERAGE = True
 
@@ -415,6 +419,8 @@ def get_param_dist():
             }
     elif  MODEL == "RF":
        param_dist = {
+            'classifier': [get_model()],
+            'classifier__class_weight': ['balanced'],
             'classifier__n_estimators': randint(50,500),
             'classifier__max_depth': randint(1,79),
              #'min_samples_split': randint(2, 40),
@@ -424,6 +430,8 @@ def get_param_dist():
             }
     else:
         param_dist = {
+             'classifier': [get_model()],
+             'classifier__class_weight': ['balanced'],
              'classifier__max_depth': randint(1,79),
              }
     return param_dist

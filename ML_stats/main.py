@@ -14,6 +14,9 @@ from scipy.stats import randint, uniform
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.svm import SVC
+from sklearn.svm import NuSVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import RidgeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import balanced_accuracy_score, jaccard_score, average_precision_score
 #from sklearn.pipeline import Pipeline
@@ -46,9 +49,9 @@ from features import init, init_blinks, blinks
 from features import left, right, left_right, left_right_unite
 
 #columns_to_select = init
-#columns_to_select = init_blinks
+columns_to_select = init_blinks
 #columns_to_select = init_blinks_no_head
-columns_to_select = left_right
+#columns_to_select = left_right
 #columns_to_select = blinks
 #columns_to_select = init_blinks_quantiles
 
@@ -61,15 +64,14 @@ RANDOM_STATE = 0
 CHS = True
 BINARY = True
 
-RANDOM_SEARCH = True
+RANDOM_SEARCH = False
 
-LEFT_RIGHT_AVERAGE = True
+LEFT_RIGHT_AVERAGE = False
 LEFT_RIGHT_DIFF = False
 LEFT_RIGHT_DROP = False
 
-#Lasso, Ridge, or ElasticNet (models with built-in regularization)?
-#MODEL = "LGBM"
-MODEL = "SVC"
+MODEL = "LGBM"
+#MODEL = "SVC"
 #MODEL = "RF"
 #MODEL = "BRF"
 #MODEL = "EEC"
@@ -264,6 +266,8 @@ def leave_one_out_with_label_transform(pipeline, X, y):
     print(f"Balanced Accuracy: {balanced_acc:.4f}")
     print(f"Class1 accuracy: {c_w_accuracy[0]:.4f}")
     print(f"Class2 accuracy: {c_w_accuracy[1]:.4f}")
+    if not BINARY:
+        print(f"Class3 accuracy: {c_w_accuracy[2]:.4f}")
     print(f"Precision: {macro_precision:.4f}")
     print(f"Recall: {macro_recall:.4f}")
     print(f"F1-Score: {macro_f1:.4f}")
@@ -296,7 +300,7 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         #print(y_test)
         
         # Set class weights to the classifier
-        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+        #pipeline.named_steps['classifier'].set_params(class_weight='balanced')
         
         #print("before model_with_tuning")
         # Get the best model after tuning on the current fold
@@ -327,6 +331,9 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
     print(f"Class1 accuracy: {np.mean(class1_values):.2f} ± {np.std(class1_values):.2f}")
     class2_values = [sublist[1] for sublist in c_w_accuracies if not math.isnan(sublist[1])]
     print(f"Class2 accuracy: {np.mean(class2_values):.2f} ± {np.std(class2_values):.2f}")
+    if not BINARY:
+        class3_values = [sublist[2] for sublist in c_w_accuracies if not math.isnan(sublist[2])]
+        print(f"Class3 accuracy: {np.mean(class3_values):.2f} ± {np.std(class3_values):.2f}")
     print(f"Precision: {np.mean(precisions):.2f} ± {np.std(precisions):.2f}")
     print(f"Recall: {np.mean(recalls):.2f} ± {np.std(recalls):.2f}")
     print(f"F1-Score: {np.mean(f1_scores):.2f} ± {np.std(f1_scores):.2f}")
@@ -398,7 +405,10 @@ def hold_out_stratified_with_label_transform(pipeline, X, y):
 def get_model():
     print(f"Model: {MODEL}")
     if MODEL == "LGBM":
-        return LGBMClassifier(random_state=RANDOM_STATE, verbose=-1)
+        #return LGBMClassifier(random_state=RANDOM_STATE, verbose=-1)
+        #return RidgeClassifier()
+        #return NuSVC()
+        return KNeighborsClassifier()
     elif MODEL == "SVC":
         return SVC()
     elif MODEL == "RF":
@@ -418,6 +428,7 @@ def get_model():
 def get_params():
     if MODEL == "LGBM":
         if RANDOM_SEARCH:
+            '''
             params = {
                 'classifier__num_leaves': np.arange(20, 150, 10),  # Range of number of leaves
                 'classifier__max_depth': np.arange(3, 15),         # Range of max depth
@@ -431,7 +442,13 @@ def get_params():
                 'classifier__bagging_freq': [0, 5, 10],           # Frequency of row sampling
                 'classifier__subsample_for_bin': [200000, 300000, 400000],  # Number of samples used to construct histograms
                 }
+            '''
+            params = {
+                'classifier__alpha': [0.1, 0.5, 1.0],  # Smoothing parameter
+                'classifier__norm': [True, False]      # Whether to normalize weights
+                }
         else:
+            '''
             params = {
                 'classifier__num_leaves': [20, 31, 50],
                 'classifier__max_depth': [5, 10, -1],
@@ -444,22 +461,22 @@ def get_params():
                 'classifier__bagging_fraction': [0.8, 1.0],
                 'classifier__bagging_freq': [0, 5]
                 }
+            '''
+            params = {
+                'classifier__n_neighbors': [3, 5, 7, 9],  # Number of neighbors
+                'classifier__weights': ['uniform', 'distance'],  # Weight function used in prediction
+                'classifier__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Algorithm for nearest neighbor search
+                'classifier__p': [1, 2],  # Power parameter for the Minkowski distance (1=Manhattan, 2=Euclidean)
+                }
     elif MODEL == "SVC":
         if RANDOM_SEARCH:
             params = {
                 'classifier__C': uniform(loc=0, scale=1000),  # Regularization parameter
-                #'classifier__kernel': ['linear', 'rbf', 'sigmoid'],  # Kernel type
-                #'classifier__kernel': ['linear', 'rbf'],  # Kernel type
                 'classifier__kernel': ['sigmoid', 'linear', 'rbf'],  # Kernel type
-                #'classifier__kernel': ['rbf'],  # Kernel type
-                #'classifier__gamma': ['scale', 'auto'],  # Kernel coefficient
                 'classifier__gamma': ['auto', 0.001, 0.1],  # Kernel coefficient
-                
-                #'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100],
-                #'classifier__gamma': [1],
-                #'classifier__coef0': uniform(-5, 5), # sigmoid
-                #'classifier__tol': [0.0001],
-                #'classifier__degree': randint(1, 10)  # Degree of polynomial kernel
+                #'classifier__C': [0.001, 0.01, 1, 5, 10, 100],
+                #'classifier__kernel': ['linear', 'rbf'],
+                #'classifier__gamma': [0.001, 0.01, 0.1, 1, 10, 100, 'scale', 'auto'],
                 }
         else:
             '''
@@ -640,12 +657,7 @@ def main():
     
     features = data_df.columns
     print(f"Number of features: {len(features)}")
-    
-    ###########
-    features = ['Blink Opening Amplitude Max']
-    data_df = data_df[features]
-    ###########
-    
+        
     X = data_df.to_numpy()
     y = np.array(scores)
     

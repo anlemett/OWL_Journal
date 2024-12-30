@@ -16,31 +16,30 @@ from sklearn.inspection import permutation_importance
 SCORING = 'f1_macro'
 
 RANDOM_STATE = 0
-
+'''
 # Function to calculate permutation importance using sklearn
 def calculate_permutation_importance(model, X_val, y_val, scoring=SCORING, n_repeats=30):
-    #result = permutation_importance(model, X_val, y_val, scoring=scoring,
-    #                                n_repeats=n_repeats, random_state=RANDOM_STATE)
-    #return result.importances_mean
 
     importances = []
-    '''
-    for seed in range(5):  # Aggregate over 5 seeds
-        result = permutation_importance(model, X_val, y_val, scoring=SCORING, n_repeats=10, random_state=seed)
-        importances.append(result.importances_mean) #importances_mean - means over n_repeats
-    
-    importances.append(result.importances_mean) #importances_mean - means over n_repeats
-
-    average_importances = np.mean(importances, axis=0) #means over seeds
-    '''
     result = permutation_importance(model, X_val, y_val, scoring=SCORING, n_repeats=10, random_state=RANDOM_STATE)
     
     average_importances = result.importances_mean #importances_mean - means over n_repeats
-    
-    #print("average_importances")
-    #print(average_importances)
-    
+        
     return average_importances #importances for all features from X_val
+'''
+# Function to calculate permutation importance using sklearn
+def calculate_permutation_importance(model, X_val, y_val, scoring=SCORING, n_repeats=30):
+
+    importances = []
+
+    for seed in range(5):  # Aggregate over 5 seeds
+        result = permutation_importance(model, X_val, y_val, scoring=SCORING, n_repeats=10, random_state=seed)
+        importances.append(result.importances_mean) #importances_mean - means over n_repeats
+
+    average_importances = np.mean(importances, axis=0) #means over seeds
+        
+    return average_importances #importances for all features from X_val
+
 
 # Custom RFE class with permutation importance
 class RFEPermutationImportance:
