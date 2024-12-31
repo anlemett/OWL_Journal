@@ -195,15 +195,26 @@ right = [
   "Right Blink Closing Speed Max", "Right Blink Opening Speed Max",
   ]
 
-left_right_unite = [
-  "Pupil Diameter Mean", "Pupil Diameter Std",
-  "Pupil Diameter Median", "Pupil Diameter Min", "Pupil Diameter Max",
-  "Blink Closing Amplitude Mean", "Blink Opening Amplitude Mean",
-  "Blink Closing Speed Mean", "Blink Opening Speed Mean",
-  "Blink Closing Amplitude Std", "Blink Opening Amplitude Std", 
-  "Blink Closing Speed Std", "Blink Opening Speed Std",
-  "Blink Closing Amplitude Max", "Blink Opening Amplitude Max",
-  "Blink Closing Speed Max", "Blink Opening Speed Max",
+left_right_average = [
+  "Pupil Diameter Mean Mean", "Pupil Diameter Std Mean",
+  "Pupil Diameter Median Mean", "Pupil Diameter Min Mean", "Pupil Diameter Max Mean",
+  "Blink Closing Amplitude Mean Mean", "Blink Opening Amplitude Mean Mean",
+  "Blink Closing Speed Mean Mean", "Blink Opening Speed Mean Mean",
+  "Blink Closing Amplitude Std Mean", "Blink Opening Amplitude Std Mean", 
+  "Blink Closing Speed Std Mean", "Blink Opening Speed Std Mean",
+  "Blink Closing Amplitude Max Mean", "Blink Opening Amplitude Max Mean",
+  "Blink Closing Speed Max Mean", "Blink Opening Speed Max Mean",
+  ]
+
+left_right_diff = [
+  "Pupil Diameter Mean Diff", "Pupil Diameter Std Diff",
+  "Pupil Diameter Median Diff", "Pupil Diameter Min Diff", "Pupil Diameter Max Diff",
+  "Blink Closing Amplitude Mean Diff", "Blink Opening Amplitude Mean Diff",
+  "Blink Closing Speed Mean Diff", "Blink Opening Speed Mean Diff",
+  "Blink Closing Amplitude Std Diff", "Blink Opening Amplitude Std Diff", 
+  "Blink Closing Speed Std Diff", "Blink Opening Speed Std Diff",
+  "Blink Closing Amplitude Max Diff", "Blink Opening Amplitude Max Diff",
+  "Blink Closing Speed Max Diff", "Blink Opening Speed Max Diff",
   ]
 
 

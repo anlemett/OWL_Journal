@@ -24,9 +24,11 @@ from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold
 from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
 from permutation import RFEPermutationImportance
 
+from get_model import get_model
+from get_random_search_params import get_random_search_params
 from features import init, init_blinks, init_blinks_quantiles
 from features import init_blinks_no_head, init_blinks_no_head_quantiles
-from features import left, right, left_right_unite
+from features import left, right, left_right, left_right_average
 
 #columns_to_select = init
 columns_to_select = init_blinks_no_head
@@ -49,7 +51,8 @@ BINARY = True
 
 LEFT_RIGHT_AVERAGE = True
 
-MODEL = "SVC"
+MODEL = "KNN"
+#MODEL = "SVC"
 #MODEL = "RF"
 #MODEL = "HGBC"
 
@@ -121,7 +124,7 @@ class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
 # Function to perform parameter tuning with RandomizedSearchCV on each training fold
 def model_with_tuning_stratified(pipeline, X_train, y_train):
     
-    param_dist = get_param_dist()
+    param_dist = get_random_search_params(MODEL)
     
     stratified_kfold = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
     
@@ -151,7 +154,8 @@ def cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df,
     _, y_transformed = pipeline.named_steps['label_transform'].transform(X, y)
 
     # Set class weights to the classifier
-    pipeline.named_steps['classifier'].set_params(class_weight='balanced')
+    if MODEL != "KNN":
+        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
     
     data_split = list(enumerate(cv.split(X, y_transformed), start=1))
 
@@ -207,222 +211,7 @@ def cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df,
     
     print(features) # the last feature (the most important)
     removed_features.append(features[0])
-    print(removed_features)
-
-      
-##############
-# Hold-out function that handles the pipeline and permutation importance
-def hold_out_with_label_transform_and_permutation(pipeline, X, y, features):
-    
-    pipeline.named_steps['label_transform'].fit(X, y)  # Fit to compute thresholds
-    _, y_transformed = pipeline.named_steps['label_transform'].transform(X, y)
-    
-    # Spit the data into train and test
-    #ss = ShuffleSplit(n_splits=1, test_size=.1, random_state=RANDOM_STATE)
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=.1, random_state=RANDOM_STATE)
-    
-    #for i, (train_idx, test_idx) in enumerate(sss.split(X)):
-    for i, (train_idx, test_idx) in enumerate(sss.split(X,y_transformed)):
-        
-        X_train = np.array(X)[train_idx.astype(int)]
-        y_train = np.array(y_transformed)[train_idx.astype(int)]
-        X_test = np.array(X)[test_idx.astype(int)]
-        y_test = np.array(y_transformed)[test_idx.astype(int)]
-        
-        #pipeline.named_steps['label_transform'].fit(X_train, y_train)  # Fit to compute thresholds
-        #_, y_train_transformed = pipeline.named_steps['label_transform'].transform(X_train, y_train)
-        #_, y_test_transformed = pipeline.named_steps['label_transform'].transform(X_test, y_test)
-        
-        # Set class weights to the classifier
-        pipeline.named_steps['classifier'].set_params(class_weight='balanced')
-
-        # Get the best model after tuning on the current fold
-        best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
-
-        #######
-        #X_df = pd.DataFrame(X, columns=features)
-        
-        test_accuracies = []
-        acc_num_features_list = []
-        test_f1_scores = []
-        f1_num_features_list = []
-        
-        # Perform RFE with Permutation Importance
-        rfe = RFEPermutationImportance(best_model, min_features_to_select=1,
-                                       n_repeats=5)
-
-        X_train = pd.DataFrame(X_train, columns=features)
-        X_test = pd.DataFrame(X_test, columns=features)
-        
-        rfe.fit(X_train, y_train, X_test, y_test, features)
-            
-        # Store accuracies for plotting
-        for num_features, accuracy in rfe.accuracies_:
-            acc_num_features_list.append(num_features)
-            test_accuracies.append(accuracy)
-    
-        # Store f1 for plotting
-        for num_features, train_f1_score in rfe.f1_scores_:
-            f1_num_features_list.append(num_features)
-            test_f1_scores.append(train_f1_score)
-    
-        # Select the remaining features
-        selected_features = list(X_train.columns[rfe.support_])
-               
-        X_train_selected = X_train[selected_features]
-
-        # Final model training with selected features
-        best_model.fit(X_train_selected, y_train)
-        
-        ############################## Predict ################################
-    
-        X_test_selected = X_test[selected_features]
-        y_pred = best_model.predict(X_test_selected)
-    
-        ############################ Evaluate #################################
-        
-        print(selected_features)
-    
-        accuracy = accuracy_score(y_pred=y_pred, y_true=y_test)
-        
-        f1_macro = f1_score(y_pred=y_pred, y_true=y_test, average='macro')
-    
-        print("Accuracy:", accuracy)
-        print("Macro F1-score:", f1_macro)
-    
-        test_accuracies.reverse()
-        test_f1_scores.reverse()
-        acc_num_features_list.reverse()
-        f1_num_features_list.reverse()
-        print(test_accuracies)
-        print(test_f1_scores)
-        
-        y = np.array(test_accuracies)
-        y_ = np.array(test_f1_scores)
-        x = np.array(acc_num_features_list)
-        
-        filename = 'curve_coordinates_acc.csv'
-        with open(filename, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['x', 'y'])  # Write the header
-            for i in range(len(x)):
-                writer.writerow([x[i], y[i]])
-        
-        filename = 'curve_coordinates_f1.csv'
-        with open(filename, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['x', 'y'])  # Write the header
-            for i in range(len(x)):
-                writer.writerow([x[i], y_[i]])
-        
-        elbow_point_idx = find_elbow_point(x, y)
-        elbow_point_num = elbow_point_idx + 1
-        elbow_point_acc = y[elbow_point_idx]
-        corr_f1 = y_[elbow_point_idx]
-        print(f"The elbow point for accuracy is at {elbow_point_num} features.")
-        print(f"Accuracy at the elbow point: {elbow_point_acc}")
-        print(f"Corresponding F1-score: {corr_f1}")
-        
-        elbow_point_f1_idx = find_elbow_point(x, y_)
-        elbow_point_f1_num = elbow_point_f1_idx + 1
-        elbow_point_f1 = y_[elbow_point_f1_idx]
-        corr_acc = y[elbow_point_f1_idx]
-        print(f"The elbow point for F1-score is at {elbow_point_f1_num} features.")
-        print(f"F1-score at the elbow point: {elbow_point_f1}")
-        print(f"Corresponding accuracy: {corr_acc}")
-        
-        
-        if PLOT:
-            if CHS:
-                filename = SCORING + "_scoring_chs"
-            else:
-                filename = SCORING + "_scoring_eeg" + str(TIME_INTERVAL_DURATION)
-            if BINARY:
-                filename = filename + "_binary_"
-            else:
-                filename = filename + "_3classes_"
-            filename = filename + MODEL
-            
-            # Plot accuracies
-            fig0, ax0 = plt.subplots()
-            ax0.plot(x, y, marker='o')
-            
-            ax0.set_xlabel('Number of Features', fontsize=14)
-            ax0.set_ylabel('Accuracy', fontsize=14)
-            ax0.tick_params(axis='both', which='major', labelsize=12)
-            ax0.tick_params(axis='both', which='minor', labelsize=10)
-            plt.grid(True)
-            acc_filename = filename + "_acc.png"
-            full_filename = os.path.join(FIG_DIR, acc_filename)
-            #plt.gca().set_aspect('equal', adjustable='box')
-            plt.savefig(full_filename, dpi=600)
-            plt.show()
-            
-            # Plot F1-scores
-            fig2, ax2 = plt.subplots()
-            ax2.plot(x, y_, marker='o')
-            ax2.set_xlabel('Number of Features', fontsize=14)
-            ax2.set_ylabel('F1-score', fontsize=14)
-            ax2.tick_params(axis='both', which='major', labelsize=12)
-            ax2.tick_params(axis='both', which='minor', labelsize=10)
-            plt.grid(True)
-            f1_filename = filename + "_f1.png"
-            full_filename = os.path.join(FIG_DIR, f1_filename)
-            plt.savefig(full_filename, dpi=600)
-            plt.show()
-        
-        max_acc = max(test_accuracies)
-        max_index = test_accuracies.index(max_acc)
-        #print(f"Max_index: {max_index}")
-        number_of_features = max_index + 1
-        acc = test_accuracies[max_index]
-        f1 = test_f1_scores[max_index]
-        print("Optimal number of features by maximizing Accuracy")
-        print(f"Optimal number of features: {number_of_features}, Accuracy: {acc}, F1-score: {f1}")
-
-        max_f1 = max(test_f1_scores)
-        max_index = test_f1_scores.index(max_f1)
-        #print(f"Max_index: {max_index}")
-        number_of_features = max_index + 1
-        acc = test_accuracies[max_index]
-        f1 = test_f1_scores[max_index]
-        print("Optimal number of features by maximizing F1-score")
-        print(f"Optimal number of features: {number_of_features}, Accuracy: {acc}, F1-score: {f1}, ")
-    
-
-##############        
-   
-def get_model():
-    print(f"Model: {MODEL}")
-    if MODEL == "SVC":
-        return SVC()
-    elif MODEL == "RF":
-        return RandomForestClassifier(random_state=RANDOM_STATE, max_features=None)
-    else:
-        return HistGradientBoostingClassifier(random_state=RANDOM_STATE)
-
-def get_param_dist():
-    if MODEL == "SVC":
-        param_dist = {
-            'classifier__C': uniform(loc=0, scale=10),  # Regularization parameter
-            'classifier__kernel': ['linear', 'rbf', 'sigmoid'],  # Kernel type
-            'classifier__gamma': ['scale', 'auto'],  # Kernel coefficient
-            'classifier__degree': randint(1, 10)  # Degree of polynomial kernel
-            }
-    elif  MODEL == "RF":
-       param_dist = {
-            'classifier__n_estimators': randint(50,500),
-            'classifier__max_depth': randint(1,79),
-             #'min_samples_split': randint(2, 40),
-             #'min_samples_leaf': randint(1, 40),
-             #'max_features': ['auto', 'sqrt', 'log2', None],
-             #'criterion': ['gini', 'entropy', 'log_loss']
-            }
-    else:
-        param_dist = {
-             'classifier__max_depth': randint(1,79),
-             }
-    return param_dist
+    print(removed_features)     
 
 def get_percentiles():
     if BINARY:
@@ -485,7 +274,7 @@ def main():
             col1 =  left[i]
             col2 = right[i]
             
-            data_df[left_right_unite[i]] = (data_df[col1] + data_df[col2])/2
+            data_df[left_right_average[i]] = (data_df[col1] + data_df[col2])/2
             data_df = data_df.drop([col1, col2], axis=1)
     
     features = data_df.columns
@@ -498,7 +287,7 @@ def main():
             # Step 2: Apply custom label transformation
             ('label_transform', ThresholdLabelTransformer(get_percentiles())),
             # Step 3: Choose the model
-            ('classifier', get_model())
+            ('classifier', get_model(MODEL, RANDOM_STATE))
             ])
     
     
