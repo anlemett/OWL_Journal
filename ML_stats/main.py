@@ -58,15 +58,17 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 FIG_DIR = os.path.join(".", "Figures")
 RANDOM_STATE = 0
 CHS = True
-BINARY = False
+BINARY = True
 
 LEFT_RIGHT_AVERAGE = False
 LEFT_RIGHT_DIFF = False
 LEFT_RIGHT_DROP = False
 
+#MODEL = "LR"
+#MODEL = "DT"
 #MODEL = "KNN"
 #MODEL = "SVC"
-#MODEL = "HGBC"
+MODEL = "HGBC"
 #MODEL = "XGB"
 #MODEL = "NC"
 #MODEL = "RNC"
@@ -77,8 +79,8 @@ LEFT_RIGHT_DROP = False
 #MODEL = "ETC"
 #MODEL = "MLPC"
 #MODEL = "LDA"
-#MODEL = "QDA" #slow
-MODEL = "ABC"
+#MODEL = "QDA"
+#MODEL = "ABC"
 #MODEL = "BC"
 #MODEL = "VC"
 #MODEL = "SC"
@@ -184,7 +186,7 @@ def calculate_classwise_accuracies(y_pred, y_true):
 # Function to perform parameter tuning with RandomizedSearchCV on each training fold
 def model_with_tuning_stratified(pipeline, X_train, y_train):
     
-    if (MODEL != "EEC") and (MODEL != "ABC")and (MODEL != "KNN"):
+    if (MODEL != "EEC") and (MODEL != "ABC") and (MODEL != "KNN") and (MODEL != "QDA"):
         pipeline.named_steps['classifier'].set_params(class_weight='balanced')
     
     params = get_random_search_params(MODEL)
@@ -335,6 +337,12 @@ def main():
     
     data_df = data_df.drop('ATCO', axis=1)
     
+    scores = data_df['score'].to_list()
+    data_df = data_df.drop('score', axis=1)
+    
+    features = data_df.columns
+    print(f"Number of features: {len(features)}")
+    
     if LEFT_RIGHT_AVERAGE:
         for i in range(0,17):
             
@@ -360,10 +368,6 @@ def main():
             col2 = right[i]
             
             data_df = data_df.drop([col1, col2], axis=1)
-    
-            
-    scores = data_df['score'].to_list()
-    data_df = data_df.drop('score', axis=1)
     
     features = data_df.columns
     print(f"Number of features: {len(features)}")

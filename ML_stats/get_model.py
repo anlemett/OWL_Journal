@@ -1,5 +1,6 @@
-from scipy.stats import randint, uniform
+import sys
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import RidgeClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
@@ -24,8 +25,14 @@ from imblearn.ensemble import BalancedRandomForestClassifier, EasyEnsembleClassi
 
 def get_model(model, random_state):
     print(f"Model: {model}")
-    if  model == "KNN":
+    if model == "LR":
+        return LogisticRegression()
+    elif model == "DT":
+        return DecisionTreeClassifier(random_state=random_state)
+    elif  model == "KNN":
         return KNeighborsClassifier()
+    elif model == "RC":
+        return RidgeClassifier(max_iter=1000)
     #elif model == "XGB":
     #    return XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=random_state)
     elif model == "NC":
@@ -96,5 +103,8 @@ def get_model(model, random_state):
         return LabelSpreading()
     elif model == "GBC":
         return GradientBoostingClassifier(random_state=random_state)
-    else:
+    elif model == "HGBC":
         return HistGradientBoostingClassifier(random_state=random_state)
+    else:
+        print("Model not supported")
+        sys.exit(0)

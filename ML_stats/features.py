@@ -196,14 +196,14 @@ right = [
   ]
 
 left_right_average = [
-  "Pupil Diameter Mean Mean", "Pupil Diameter Std Mean",
-  "Pupil Diameter Median Mean", "Pupil Diameter Min Mean", "Pupil Diameter Max Mean",
-  "Blink Closing Amplitude Mean Mean", "Blink Opening Amplitude Mean Mean",
-  "Blink Closing Speed Mean Mean", "Blink Opening Speed Mean Mean",
-  "Blink Closing Amplitude Std Mean", "Blink Opening Amplitude Std Mean", 
-  "Blink Closing Speed Std Mean", "Blink Opening Speed Std Mean",
-  "Blink Closing Amplitude Max Mean", "Blink Opening Amplitude Max Mean",
-  "Blink Closing Speed Max Mean", "Blink Opening Speed Max Mean",
+  "Pupil Diameter Mean", "Pupil Diameter Std",
+  "Pupil Diameter Median", "Pupil Diameter Min", "Pupil Diameter Max",
+  "Blink Closing Amplitude Mean", "Blink Opening Amplitude Mean",
+  "Blink Closing Speed Mean", "Blink Opening Speed Mean",
+  "Blink Closing Amplitude Std", "Blink Opening Amplitude Std",
+  "Blink Closing Speed Std", "Blink Opening Speed Std",
+  "Blink Closing Amplitude Max", "Blink Opening Amplitude Max",
+  "Blink Closing Speed Max", "Blink Opening Speed Max",
   ]
 
 left_right_diff = [
