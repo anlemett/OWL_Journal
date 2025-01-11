@@ -7,59 +7,41 @@ import numpy as np
 import pandas as pd
 #import sys
 
-import matplotlib.pyplot as plt
-import csv
-
-#from sklearn import preprocessing
-from scipy.stats import randint, uniform
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, balanced_accuracy_score
-from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
-#from collections import Counter
-from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold
-from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
+
+from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from permutation import RFEPermutationImportance
+from feature_engine.selection import DropCorrelatedFeatures
 
 from get_model import get_model
 from get_random_search_params import get_random_search_params
-from features import init, init_blinks, init_blinks_quantiles
-from features import init_blinks_no_head, init_blinks_no_head_quantiles
-from features import left, right, left_right, left_right_average
+from features import init_blinks, init_blinks_no_head
+from features import left, right, left_right_average
 
-#columns_to_select = init
-columns_to_select = init_blinks_no_head
-#columns_to_select = init_blinks_no_head_quantiles
-#columns_to_select = init_blinks
-#columns_to_select = init_blinks_diam
-#columns_to_select = init_blinks_quantiles
+columns_to_select = init_blinks
+#columns_to_select = init_blinks_no_head
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
 ML_DIR = os.path.join(DATA_DIR, "MLInput")
-#ML_DIR = os.path.join(DATA_DIR, "MLInput_Journal")
 FIG_DIR = os.path.join(".", "Figures")
 
 RANDOM_STATE = 0
-PLOT = False
 
 CHS = True
 BINARY = True
 
-LEFT_RIGHT_AVERAGE = True
+LEFT_RIGHT_AVERAGE = False
+DROP_CORRELATED = False
 
-MODEL = "KNN"
-#MODEL = "SVC"
-#MODEL = "RF"
-#MODEL = "HGBC"
+#MODEL = "KNN"
+MODEL = "SVC"
 
 N_ITER = 100
 N_SPLIT = 10
 SCORING = 'f1_macro'
-#SCORING = 'accuracy'
 
 #TIME_INTERVAL_DURATION = 300
 TIME_INTERVAL_DURATION = 180
@@ -67,19 +49,6 @@ TIME_INTERVAL_DURATION = 180
 #TIME_INTERVAL_DURATION = 30
 #TIME_INTERVAL_DURATION = 10
 #TIME_INTERVAL_DURATION = 1
-
-def find_elbow_point(x, y):
-    # Create a line between the first and last point
-    line = np.array([x, y])
-    point1 = line[:, 0]
-    point2 = line[:, -1]
-
-    # Calculate the distances
-    distances = np.cross(point2-point1, point1-line.T)/np.linalg.norm(point2-point1)
-    elbow_index = np.argmax(np.abs(distances))
-
-    #return x[elbow_index]
-    return elbow_index
 
 
 class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
@@ -187,17 +156,17 @@ def cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df,
         
         # Perform RFE with Permutation Importance
         rfe = RFEPermutationImportance(best_model, min_features_to_select=num_features-1,
-                                       n_repeats=5)
+                                       n_repeats=20)
         
         rfe.fit(X_train, y_train_transformed, X_test, y_test_transformed, features)
         importances.append(rfe.importances)
       
       #print(importances)
       importances_np = np.array(importances)
-      # Calculate column sums
-      importances_sums = np.sum(importances_np, axis=0)
+      # Calculate the average over columns
+      importances_means = np.mean(importances_np, axis=0)
            
-      min_importance_index = np.argmin(importances_sums)
+      min_importance_index = np.argmin(importances_means)
       removed_feature = features[min_importance_index]
       removed_features.append(removed_feature)
         
@@ -215,10 +184,10 @@ def cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df,
 
 def get_percentiles():
     if BINARY:
-        print(f"BINARY")
+        print("BINARY")
         return [0.93]
     else:
-        print(f"3 classes")
+        print("3 classes")
         return [0.52, 0.93]
 
 
@@ -277,9 +246,40 @@ def main():
             data_df[left_right_average[i]] = (data_df[col1] + data_df[col2])/2
             data_df = data_df.drop([col1, col2], axis=1)
     
+    if DROP_CORRELATED:
+        # Drop correlated features
+        
+        init_features = data_df.columns
+        
+        dcf = DropCorrelatedFeatures(threshold=0.7)
+        data_df = dcf.fit_transform(data_df)
+        
+        print("Correlation Matrix:")
+        print(dcf.correlated_feature_sets_)
+        
+        print("\nFeatures to drop:")
+        print(dcf.features_to_drop_)
+        
+        retained_features = set(data_df.columns) - set(dcf.features_to_drop_)
+        print("\nRetained features:")
+        print(retained_features)
+        
+        #sys.exit(0)
+        
+        new_features = data_df.columns
+        
+        features_dif = [item for item in init_features if item not in new_features]
+        
+        print(len(init_features))
+        print(len(new_features))
+        print(len(features_dif))
+        
+        print(features_dif)
+    
     features = data_df.columns
     
     print(f"Number of features: {len(features)}")
+    print(features)
             
     pipeline = Pipeline([
             # Step 1: Standardize features
@@ -295,8 +295,6 @@ def main():
     outer_cv = StratifiedKFold(n_splits=N_SPLIT, shuffle=True, random_state=RANDOM_STATE)
     cross_val_stratified_with_label_transform_and_permutation(pipeline, data_df, scores, outer_cv, features)
     
-    #hold_out_with_label_transform_and_permutation(pipeline, X, y, features)
-        
     print(f"Number of slots: {len(data_df.index)}")
 
 
