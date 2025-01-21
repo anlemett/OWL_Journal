@@ -42,7 +42,10 @@ from get_random_search_params import get_random_search_params
 from get_grid_search_params import get_grid_search_params
 from features import init_blinks_no_head, init_blinks_quantiles
 from features import init, init_blinks, blinks
-from features import left, right, left_right, left_right_average, left_right_diff
+from features import left, right, left_right, left_right_average
+from features import left_right_diff, left_right_ratio
+from features import init_blinks_no_min_max
+from features import init_blinks_no_min_max_no_head
 
 #columns_to_select = init
 columns_to_select = init_blinks
@@ -50,6 +53,8 @@ columns_to_select = init_blinks
 #columns_to_select = left_right
 #columns_to_select = blinks
 #columns_to_select = init_blinks_quantiles
+#columns_to_select = init_blinks_no_min_max
+#columns_to_select = init_blinks_no_min_max_no_head
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -62,26 +67,32 @@ BINARY = True
 
 LEFT_RIGHT_AVERAGE = False
 LEFT_RIGHT_DIFF = False
+LEFT_RIGHT_RATIO = False
+LEFT_ONLY = False
+RIGHT_ONLY = False
+
 LEFT_RIGHT_DROP = False
 
-#MODEL = "LR"
-#MODEL = "DT"
+CORR_MATRIX = False
+
 #MODEL = "KNN"
-#MODEL = "SVC"
-MODEL = "HGBC"
+MODEL = "SVC"
+#MODEL = "ETC"
+#MODEL = "LR"
+#MODEL = "LDA"
+#MODEL = "DT"
+#MODEL = "ABC"
+#MODEL = "HGBC"
+#MODEL = "RF"
+#MODEL = "BC" 
+#MODEL = "GBC" #slow
+#MODEL = "BRF"
+#MODEL = "EEC"
 #MODEL = "XGB"
 #MODEL = "NC"
 #MODEL = "RNC"
-#MODEL = "RF"
-#MODEL = "BRF"
-#MODEL = "EEC"
-#MODEL = "GBC" #slow
-#MODEL = "ETC"
 #MODEL = "MLPC"
-#MODEL = "LDA"
 #MODEL = "QDA"
-#MODEL = "ABC"
-#MODEL = "BC"
 #MODEL = "VC"
 #MODEL = "SC"
 #MODEL = "LP"
@@ -186,7 +197,8 @@ def calculate_classwise_accuracies(y_pred, y_true):
 # Function to perform parameter tuning with RandomizedSearchCV on each training fold
 def model_with_tuning_stratified(pipeline, X_train, y_train):
     
-    if (MODEL != "EEC") and (MODEL != "ABC") and (MODEL != "KNN") and (MODEL != "QDA"):
+    if (MODEL != "EEC") and (MODEL != "ABC") and \
+      (MODEL != "KNN") and (MODEL != "LDA") and (MODEL != "BC"):
         pipeline.named_steps['classifier'].set_params(class_weight='balanced')
     
     params = get_random_search_params(MODEL)
@@ -195,6 +207,7 @@ def model_with_tuning_stratified(pipeline, X_train, y_train):
     
     random_search = RandomizedSearchCV(pipeline, params, n_iter=N_ITER, cv=stratified_kfold, scoring=SCORING, n_jobs=-1, random_state=RANDOM_STATE)
     
+    print("before fit")
     # Fit on the training data for this fold
     random_search.fit(X_train, y_train)
     
@@ -247,10 +260,10 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         # Set class weights to the classifier
         #pipeline.named_steps['classifier'].set_params(class_weight='balanced')
         
-        #print("before model_with_tuning")
+        print("before model_with_tuning")
         # Get the best model after tuning on the current fold
         best_model = model_with_tuning_stratified(pipeline, X_train, y_train)
-        #print("after model_with_tuning")
+        print("after model_with_tuning")
         
         # Fit the pipeline on transformed y_train
         best_model.fit(X_train, y_train)
@@ -268,7 +281,7 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         precisions.append(precision_score(y_test, y_pred, average='macro', zero_division=0))
         recalls.append(recall_score(y_test, y_pred, average='macro', zero_division=0))
         f1_scores.append(f1_score(y_test, y_pred, average='macro', zero_division=0))
-    
+        print(f1_scores)
     
     print(f"Accuracy: {np.mean(accuracies):.2f} ± {np.std(accuracies):.2f}")
     print(f"Balanced accuracy: {np.mean(bal_accuracies):.2f} ± {np.std(bal_accuracies):.2f}")
@@ -350,6 +363,7 @@ def main():
             col2 = right[i]
             
             data_df[left_right_average[i]] = (data_df[col1] + data_df[col2])/2
+
             #data_df = data_df.drop([col1, col2], axis=1)
     
     if LEFT_RIGHT_DIFF:
@@ -358,9 +372,30 @@ def main():
             col1 =  left[i]
             col2 = right[i]
             
-            data_df[left_right_diff[i]] = abs((data_df[col1] - data_df[col2]))
+            #data_df[left_right_diff[i]] = abs((data_df[col1] - data_df[col2]))
+            data_df[left_right_diff[i]] = (data_df[col1] - data_df[col2])
             #data_df = data_df.drop([col1, col2], axis=1)
             
+    if LEFT_RIGHT_RATIO:
+        for i in range(0,17):
+            
+            col1 =  left[i]
+            col2 = right[i]
+
+            epsilon = 1e-8  # Small constant to avoid division by zero or log of zero
+            '''
+            data_df[left_right_ratio[i]] = np.where(
+                data_df[col2] != 0,
+                (data_df[col1] + epsilon) / (data_df[col2] + epsilon),
+                0
+                )
+            '''
+            data_df[left_right_ratio[i]] = np.where(
+                data_df[col2] != 0,
+                np.log((data_df[col1] + epsilon) / (data_df[col2] + epsilon)),
+                0
+                )
+    
     if LEFT_RIGHT_DROP:
         for i in range(0,17):
             
@@ -368,22 +403,56 @@ def main():
             col2 = right[i]
             
             data_df = data_df.drop([col1, col2], axis=1)
+            
+    if LEFT_ONLY:
+        for i in range(0,17):
+            
+            col2 = right[i]
+            
+            data_df = data_df.drop([col2], axis=1)
+        
+    if RIGHT_ONLY:
+        for i in range(0,17):
+            
+            col1 = left[i]
+            
+            data_df = data_df.drop([col1], axis=1)
+    
+
+    if CORR_MATRIX:
+        best_features = ['Left Pupil Diameter Mean', 'Saccades Duration Median', 'Blinks Duration Mean', 'Right Blink Closing Amplitude Max', 'Fixation Duration Max', 'Left Pupil Diameter Median', 'Head Roll Mean', 'Right Pupil Diameter Mean', 'Head Pitch Median', 'Head Pitch Mean', 'Head Pitch Max', 'Left Blink Opening Amplitude Max', 'Head Roll Max', 'Saccades Duration Std', 'Left Pupil Diameter Std', 'Head Heading Median', 'Head Heading Std', 'Blinks Duration Max', 'Blinks Duration Median', 'Right Pupil Diameter Std', 'Blinks Duration Std', 'Right Blink Opening Speed Std']
+        print(len(best_features))
+        df = data_df[best_features]
+        
+        correlation_matrix = df.corr()
+        correlation_matrix.to_excel("correlation_matrix.xlsx")
+         
+        threshold = 0.7
+        correlated_groups = {}
+        visited = set()
+
+        for col in correlation_matrix.columns:
+            if col not in visited:
+                # Find all features highly correlated with the current feature
+                high_corr_features = correlation_matrix.index[(correlation_matrix[col].abs() > threshold) & (correlation_matrix.index != col)].tolist()
+                if high_corr_features:
+                    # Include the current feature in the group
+                    group = [col] + high_corr_features
+                    correlated_groups[col] = group
+                    visited.update(group)
+        print("Correlated feature groups:")
+        for group in correlated_groups.values():
+            print(group)
+               
+        sys.exit(0)
     
     features = data_df.columns
     print(f"Number of features: {len(features)}")
-        
+    #print(features)
+    
     X = data_df.to_numpy()
     y = np.array(scores)
-    
-    zipped = list(zip(X, y))
-    
-    np.random.shuffle(zipped)
-    
-    X, y = zip(*zipped)
-    
-    X = np.array(X)
-    y = np.array(y)
-    
+
     pipeline = Pipeline([
                 # Feature standartization step
                 ('scaler', StandardScaler()),

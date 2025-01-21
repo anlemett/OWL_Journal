@@ -69,6 +69,15 @@ float_columns = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter',
                  'RightBlinkClosingSpeed', 'RightBlinkOpeningSpeed',
                  'HeadHeading', 'HeadPitch', 'HeadRoll']
 
+pupil_diameter_metrics = ['PupilDiameter', 'LeftPupilDiameter', 'RightPupilDiameter']
+
+amplitude_metrics = ['LeftBlinkClosingAmplitude', 'LeftBlinkOpeningAmplitude',
+                     'RightBlinkClosingAmplitude', 'RightBlinkOpeningAmplitude',
+                     ]
+
+speed_metrics = ['LeftBlinkClosingSpeed', 'LeftBlinkOpeningSpeed',
+                 'RightBlinkClosingSpeed', 'RightBlinkOpeningSpeed'
+                 ]
 
 
 def getTimeInterval(timestamp, ch_first_timestamp, ch_last_timestamp):
@@ -96,6 +105,16 @@ for atco in filenames:
         num_rows = len(df)
         print("Number of rows:", num_rows)
         
+        # Remove physiologically unrealistic values
+        for metric in pupil_diameter_metrics:
+            df[metric] = df[metric].apply(lambda x: np.nan if x < 0.002 or x > 0.008 else x)
+        '''
+        for metric in amplitude_metrics:
+            df[metric] = df[metric].apply(lambda x: np.nan if x > 0.02 else x)
+
+        for metric in speed_metrics:
+            df[metric] = df[metric].apply(lambda x: np.nan if x > 0.5 else x)
+        '''
         total_nan_count = df.isna().sum().sum()
         print("Total number of NaN values in DataFrame before interpolation: ", total_nan_count)
         

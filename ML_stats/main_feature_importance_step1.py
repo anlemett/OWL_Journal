@@ -5,7 +5,7 @@ import time
 import os
 import numpy as np
 import pandas as pd
-#import sys
+import sys
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -19,9 +19,12 @@ from get_model import get_model
 from get_random_search_params import get_random_search_params
 from features import init_blinks, init_blinks_no_head
 from features import left, right, left_right_average
+from features import init_blinks_no_min_max
+from features import init_blinks_no_min_max_no_head
 
-columns_to_select = init_blinks
+#columns_to_select = init_blinks
 #columns_to_select = init_blinks_no_head
+columns_to_select = init_blinks_no_min_max
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -36,8 +39,8 @@ BINARY = True
 LEFT_RIGHT_AVERAGE = False
 DROP_CORRELATED = False
 
-#MODEL = "KNN"
-MODEL = "SVC"
+MODEL = "KNN"
+#MODEL = "SVC"
 
 N_ITER = 100
 N_SPLIT = 10
@@ -263,6 +266,7 @@ def main():
         retained_features = set(data_df.columns) - set(dcf.features_to_drop_)
         print("\nRetained features:")
         print(retained_features)
+        print(len(retained_features))
         
         #sys.exit(0)
         
@@ -279,8 +283,8 @@ def main():
     features = data_df.columns
     
     print(f"Number of features: {len(features)}")
-    print(features)
-            
+    #print(features)
+    
     pipeline = Pipeline([
             # Step 1: Standardize features
             ('scaler', StandardScaler()),

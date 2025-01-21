@@ -59,7 +59,7 @@ def main():
     
     df['scenario'] = df.apply(lambda row: scenario_dict[row['ATCO']][int(row['Run'] - 1)], axis=1)
     
-    df.to_csv("scores_scenario.csv", sep= ' ', header=True, index=False)
+    df.to_csv("scores_scenario_binary.csv", sep= ' ', header=True, index=False)
     
     # Calculate the percentage of high WL (WL = 2) for each scenario
     result = df.groupby('scenario')['WL'].apply(lambda x: (x == 2).sum() / len(x) * 100)

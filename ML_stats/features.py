@@ -153,6 +153,45 @@ init_blinks = ["Saccades Number",
   "Right Blink Closing Speed Max", "Right Blink Opening Speed Max",
   "Head Heading Max", "Head Pitch Max", "Head Roll Max"]
 
+init_blinks_no_min_max = ["Saccades Number",
+  "Saccades Duration Mean", "Saccades Duration Std", "Saccades Duration Median",
+  "Fixation Duration Mean", "Fixation Duration Std", "Fixation Duration Median",
+  "Blinks Number",
+  "Blinks Duration Mean", "Blinks Duration Std", "Blinks Duration Median",
+  "Left Pupil Diameter Mean", "Right Pupil Diameter Mean", 
+  "Left Blink Closing Amplitude Mean", "Left Blink Opening Amplitude Mean",
+  "Left Blink Closing Speed Mean", "Left Blink Opening Speed Mean",
+  "Right Blink Closing Amplitude Mean", "Right Blink Opening Amplitude Mean",
+  "Right Blink Closing Speed Mean", "Right Blink Opening Speed Mean",
+  "Head Heading Mean", "Head Pitch Mean", "Head Roll Mean",
+  "Left Pupil Diameter Std", "Right Pupil Diameter Std",
+  "Left Blink Closing Amplitude Std", "Left Blink Opening Amplitude Std", 
+  "Left Blink Closing Speed Std", "Left Blink Opening Speed Std",
+  "Right Blink Closing Amplitude Std", "Right Blink Opening Amplitude Std",
+  "Right Blink Closing Speed Std", "Right Blink Opening Speed Std",
+  "Head Heading Std", "Head Pitch Std", "Head Roll Std",
+  "Left Pupil Diameter Median", "Right Pupil Diameter Median",
+  "Head Heading Median", "Head Pitch Median", "Head Roll Median"
+  ]
+
+init_blinks_no_min_max_no_head = ["Saccades Number",
+  "Saccades Duration Mean", "Saccades Duration Std", "Saccades Duration Median",
+  "Fixation Duration Mean", "Fixation Duration Std", "Fixation Duration Median",
+  "Blinks Number",
+  "Blinks Duration Mean", "Blinks Duration Std", "Blinks Duration Median",
+  "Left Pupil Diameter Mean", "Right Pupil Diameter Mean", 
+  "Left Blink Closing Amplitude Mean", "Left Blink Opening Amplitude Mean",
+  "Left Blink Closing Speed Mean", "Left Blink Opening Speed Mean",
+  "Right Blink Closing Amplitude Mean", "Right Blink Opening Amplitude Mean",
+  "Right Blink Closing Speed Mean", "Right Blink Opening Speed Mean",
+  "Left Pupil Diameter Std", "Right Pupil Diameter Std",
+  "Left Blink Closing Amplitude Std", "Left Blink Opening Amplitude Std", 
+  "Left Blink Closing Speed Std", "Left Blink Opening Speed Std",
+  "Right Blink Closing Amplitude Std", "Right Blink Opening Amplitude Std",
+  "Right Blink Closing Speed Std", "Right Blink Opening Speed Std",
+  "Left Pupil Diameter Median", "Right Pupil Diameter Median",
+  ]
+
 left_right = [
   "Left Pupil Diameter Mean", "Right Pupil Diameter Mean", 
   "Left Blink Closing Amplitude Mean", "Left Blink Opening Amplitude Mean",
@@ -217,6 +256,62 @@ left_right_diff = [
   "Blink Closing Speed Max Diff", "Blink Opening Speed Max Diff",
   ]
 
+left_right_ratio = [
+  "Pupil Diameter Mean Ratio", "Pupil Diameter Std Ratio",
+  "Pupil Diameter Median Ratio", "Pupil Diameter Min Ratio", "Pupil Diameter Max Ratio",
+  "Blink Closing Amplitude Mean Ratio", "Blink Opening Amplitude Mean Ratio",
+  "Blink Closing Speed Mean Ratio", "Blink Opening Speed Mean Ratio",
+  "Blink Closing Amplitude Std Ratio", "Blink Opening Amplitude Std Ratio",
+  "Blink Closing Speed Std Ratio", "Blink Opening Speed Std Ratio",
+  "Blink Closing Amplitude Max Ratio", "Blink Opening Amplitude Max Ratio",
+  "Blink Closing Speed Max Ratio", "Blink Opening Speed Max Ratio",
+  ]
+
+diameter_left_right = [
+  "Left Pupil Diameter Mean", "Right Pupil Diameter Mean", 
+  "Left Pupil Diameter SD", "Right Pupil Diameter SD",
+  "Left Pupil Diameter Median", "Right Pupil Diameter Median",
+  "Left Pupil Diameter Min", "Right Pupil Diameter Min",
+  "Left Pupil Diameter Max", "Right Pupil Diameter Max",
+]
+
+amplitude_left_right = ["Left Blink Closing Amplitude Mean", "Left Blink Opening Amplitude Mean",
+  "Right Blink Closing Amplitude Mean", "Right Blink Opening Amplitude Mean",
+  "Left Blink Closing Amplitude SD", "Left Blink Opening Amplitude SD", 
+  "Right Blink Closing Amplitude SD", "Right Blink Opening Amplitude SD",
+  "Left Blink Closing Amplitude Max", "Left Blink Opening Amplitude Max",
+  "Right Blink Closing Amplitude Max", "Right Blink Opening Amplitude Max",
+]
+
+speed_left_right = ["Left Blink Closing Speed Mean", "Left Blink Opening Speed Mean",
+  "Right Blink Closing Speed Mean", "Right Blink Opening Speed Mean",
+  "Left Blink Closing Speed SD", "Left Blink Opening Speed SD",
+  "Right Blink Closing Speed SD", "Right Blink Opening Speed SD",
+  "Left Blink Closing Speed Max", "Left Blink Opening Speed Max",
+  "Right Blink Closing Speed Max", "Right Blink Opening Speed Max"
+  ]
+
+saccade_duration = ["Saccades Duration Mean", "Saccades Duration SD", 
+                    "Saccades Duration Median",
+                    "Saccades Duration Max"
+                    ]
+
+fixation_duration = ["Fixation Duration Mean", "Fixation Duration SD",
+                     "Fixation Duration Median",
+                     "Fixation Duration Max"
+                     ]
+
+blink_duration =  ["Blinks Duration Mean", "Blinks Duration SD",
+                   "Blinks Duration Median",
+                   "Blinks Duration Min", "Blinks Duration Max"
+                   ]
+
+head_position =  ["Head Heading Mean", "Head Pitch Mean", "Head Roll Mean",
+                  "Head Heading SD", "Head Pitch SD", "Head Roll SD",
+                  "Head Heading Median", "Head Pitch Median", "Head Roll Median",
+                  "Head Heading Min", "Head Pitch Min", "Head Roll Min",
+                  "Head Heading Max", "Head Pitch Max", "Head Roll Max"
+                  ]
 
 init_quantiles = ["Saccades Number",
  "Saccades Duration Mean", "Saccades Duration Std", "Saccades Duration Median",
