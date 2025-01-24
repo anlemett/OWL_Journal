@@ -18,13 +18,28 @@ from feature_engine.selection import DropCorrelatedFeatures
 from get_model import get_model
 from get_random_search_params import get_random_search_params
 from features import init_blinks, init_blinks_no_head
-from features import left, right, left_right_average
+from features import left, right, left_right
+from features import left_right_average, left_right_diff
 from features import init_blinks_no_min_max
 from features import init_blinks_no_min_max_no_head
+from features import left_no_min_max, right_no_min_max
+from features import left_right_no_min_max
+from features import left_right_average_no_min_max
+from features import left_right_diff_no_min_max
+
+left = left_no_min_max
+right = right_no_min_max
+left_right = left_right_no_min_max
+left_right_average = left_right_average_no_min_max
+left_right_diff = left_right_diff_no_min_max
 
 #columns_to_select = init_blinks
 #columns_to_select = init_blinks_no_head
-columns_to_select = init_blinks_no_min_max
+#columns_to_select = left_right
+
+#columns_to_select = init_blinks_no_min_max
+#columns_to_select = init_blinks_no_min_max_no_head
+columns_to_select = left_right_no_min_max
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -36,7 +51,10 @@ RANDOM_STATE = 0
 CHS = True
 BINARY = True
 
-LEFT_RIGHT_AVERAGE = False
+LEFT_RIGHT_AVERAGE = True
+LEFT_RIGHT_DIFF = True
+LEFT_RIGHT_DROP = True
+
 DROP_CORRELATED = False
 
 MODEL = "KNN"
@@ -241,12 +259,34 @@ def main():
     data_df = data_df.drop('score', axis=1)
     
     if LEFT_RIGHT_AVERAGE:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]
             
             data_df[left_right_average[i]] = (data_df[col1] + data_df[col2])/2
+
+            #data_df = data_df.drop([col1, col2], axis=1)
+    
+    if LEFT_RIGHT_DIFF:
+        #for i in range(0,17):
+        for i in range(0,11):
+            
+            col1 =  left[i]
+            col2 = right[i]
+            
+            #data_df[left_right_diff[i]] = abs((data_df[col1] - data_df[col2]))
+            data_df[left_right_diff[i]] = (data_df[col1] - data_df[col2])
+            #data_df = data_df.drop([col1, col2], axis=1)
+
+    if LEFT_RIGHT_DROP:
+        #for i in range(0,17):
+        for i in range(0,11):
+            
+            col1 =  left[i]
+            col2 = right[i]
+            
             data_df = data_df.drop([col1, col2], axis=1)
     
     if DROP_CORRELATED:

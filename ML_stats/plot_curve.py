@@ -48,8 +48,8 @@ y_scale = pixel_height / y_range
 A = np.array([x[0] * x_scale, y[0] * y_scale])
 B = np.array([x[-1] * x_scale, y[-1] * y_scale])
 
-elbow_point_num = 8
-elbow_point_idx = 7
+elbow_point_num = 16
+elbow_point_idx = 15
  
 # Define the point from which the perpendicular is drawn
 P = np.array([elbow_point_num * x_scale, y[elbow_point_idx] * y_scale])

@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from features import diameter_left_right, amplitude_left_right, speed_left_right
 from features import saccade_duration, fixation_duration, blink_duration
 from features import head_position
-#columns_to_select = diameter_left_right
+columns_to_select = diameter_left_right
 #columns_to_select = amplitude_left_right
-#xlabel = "Value [m]"
+xlabel = "Value [m]"
 #columns_to_select = speed_left_right
 #xlabel = "Value [m/sec]"
 #columns_to_select = saccade_duration
@@ -23,8 +23,8 @@ from features import head_position
 #xlabel = "Value [1/250 sec]"
 #columns_to_select = head_position
 #xlabel = "Value [rad]"
-columns_to_select = ["Saccades Number", "Blinks Number"]
-xlabel = "number"
+#columns_to_select = ["Saccades Number", "Blinks Number"]
+#xlabel = "number"
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -32,7 +32,7 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 #ML_DIR = os.path.join(DATA_DIR, "MLInput_Journal")
 FIG_DIR = os.path.join(".", "Figures")
 
-filename = "ML_features_CHS_SD.csv"
+filename = "ML_features_CHS.csv"
 full_filename = os.path.join(ML_DIR, filename)
     
 df = pd.read_csv(full_filename, sep=' ')

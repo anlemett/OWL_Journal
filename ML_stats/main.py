@@ -40,21 +40,31 @@ from imblearn.pipeline import Pipeline
 from get_model import get_model
 from get_random_search_params import get_random_search_params
 from get_grid_search_params import get_grid_search_params
-from features import init_blinks_no_head, init_blinks_quantiles
-from features import init, init_blinks, blinks
+from features import init, init_blinks, init_blinks_no_head
 from features import left, right, left_right, left_right_average
 from features import left_right_diff, left_right_ratio
 from features import init_blinks_no_min_max
 from features import init_blinks_no_min_max_no_head
+from features import left_no_min_max, right_no_min_max
+from features import left_right_no_min_max, left_right_average_no_min_max
+from features import left_right_diff_no_min_max, left_right_ratio_no_min_max
+
+left = left_no_min_max
+right = right_no_min_max
+left_right = left_right_no_min_max
+left_right_average = left_right_average_no_min_max
+left_right_diff = left_right_diff_no_min_max
+left_right_ratio = left_right_ratio_no_min_max
 
 #columns_to_select = init
-columns_to_select = init_blinks
+#columns_to_select = init_blinks
 #columns_to_select = init_blinks_no_head
-#columns_to_select = left_right
-#columns_to_select = blinks
-#columns_to_select = init_blinks_quantiles
-#columns_to_select = init_blinks_no_min_max
+
+columns_to_select = init_blinks_no_min_max
 #columns_to_select = init_blinks_no_min_max_no_head
+
+#columns_to_select = left_right
+#columns_to_select = left_right_no_min_max
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -63,7 +73,7 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 FIG_DIR = os.path.join(".", "Figures")
 RANDOM_STATE = 0
 CHS = True
-BINARY = True
+BINARY = False
 
 LEFT_RIGHT_AVERAGE = False
 LEFT_RIGHT_DIFF = False
@@ -76,15 +86,15 @@ LEFT_RIGHT_DROP = False
 CORR_MATRIX = False
 
 #MODEL = "KNN"
-MODEL = "SVC"
+#MODEL = "SVC"
 #MODEL = "ETC"
 #MODEL = "LR"
 #MODEL = "LDA"
 #MODEL = "DT"
 #MODEL = "ABC"
-#MODEL = "HGBC"
+#MODEL = "BC"
 #MODEL = "RF"
-#MODEL = "BC" 
+MODEL = "HGBC"
 #MODEL = "GBC" #slow
 #MODEL = "BRF"
 #MODEL = "EEC"
@@ -156,8 +166,8 @@ class ThresholdLabelTransformer(BaseEstimator, TransformerMixin):
 
 def calculate_classwise_accuracies(y_pred, y_true):
     
-    print(f"y_pred: {y_pred}")
-    print(f"y_true: {y_true}")
+    #print(f"y_pred: {y_pred}")
+    #print(f"y_true: {y_true}")
     
     y_pred_np = np.array(y_pred)
     y_true_np = np.array(y_true)
@@ -271,8 +281,8 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         # Predict the labels on the transformed test data
         y_pred = best_model.predict(X_test)
         
-        print(y_test)
-        print(y_pred)
+        #print(y_test)
+        #print(y_pred)
         
         # Calculate the metrics
         accuracies.append(accuracy_score(y_test, y_pred))
@@ -357,7 +367,8 @@ def main():
     print(f"Number of features: {len(features)}")
     
     if LEFT_RIGHT_AVERAGE:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]
@@ -367,7 +378,8 @@ def main():
             #data_df = data_df.drop([col1, col2], axis=1)
     
     if LEFT_RIGHT_DIFF:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]
@@ -377,7 +389,8 @@ def main():
             #data_df = data_df.drop([col1, col2], axis=1)
             
     if LEFT_RIGHT_RATIO:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]
@@ -397,7 +410,8 @@ def main():
                 )
     
     if LEFT_RIGHT_DROP:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]

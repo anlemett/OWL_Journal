@@ -19,20 +19,145 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from get_model import get_model
 from get_random_search_params import get_random_search_params
 from features import init_blinks, init_blinks_no_head
+from features import init_blinks_no_min_max
+from features import init_blinks_no_min_max_no_head
 from features import left, right, left_right_average
+from features import left_no_min_max, right_no_min_max
+from features import left_right_no_min_max
+from features import left_right_average_no_min_max
+from features import left_right_diff_no_min_max
+
+left = left_no_min_max
+right = right_no_min_max
+left_right = left_right_no_min_max
+left_right_average = left_right_average_no_min_max
+left_right_diff = left_right_diff_no_min_max
 
 #columns_to_select = init_blinks
-columns_to_select = init_blinks_no_head
+#columns_to_select = init_blinks_no_head
+columns_to_select = init_blinks_no_min_max
+#columns_to_select = init_blinks_no_min_max_no_head
+#columns_to_select = left_right_no_min_max
 
 CHS = True
-BINARY = False
-LEFT_RIGHT_AVERAGE = False
+BINARY = True
+
+LEFT_RIGHT_AVERAGE = True
+LEFT_RIGHT_DIFF = True
+LEFT_RIGHT_DROP = True
 
 #MODEL = "SVC"
 MODEL = "KNN"
-
 '''
 #init_blinks, 64 features
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = ['Right Pupil Diameter Median', 'Blinks Duration Max', 'Left Blink Opening Speed Std', 'Right Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Head Roll Min', 'Left Blink Closing Speed Std', 'Right Blink Closing Amplitude Mean', 'Right Pupil Diameter Std', 'Blinks Number', 'Fixation Duration Mean', 'Right Blink Opening Amplitude Std', 'Saccades Duration Mean', 'Left Blink Opening Amplitude Mean', 'Left Blink Closing Speed Mean', 'Head Roll Median', 'Head Heading Max', 'Head Pitch Max', 'Left Blink Opening Speed Mean', 'Saccades Duration Max', 'Right Blink Closing Speed Std', 'Left Blink Closing Amplitude Mean', 'Fixation Duration Std', 'Head Heading Min', 'Right Pupil Diameter Min', 'Head Roll Max', 'Left Blink Closing Speed Max', 'Head Heading Std', 'Right Blink Closing Speed Max', 'Right Blink Opening Speed Std', 'Right Blink Opening Amplitude Max', 'Left Pupil Diameter Min', 'Right Pupil Diameter Max', 'Left Pupil Diameter Max', 'Blinks Duration Std', 'Left Blink Closing Amplitude Max', 'Right Blink Opening Speed Max', 'Right Blink Opening Amplitude Mean', 'Left Blink Opening Speed Max', 'Blinks Duration Median', 'Head Heading Mean', 'Head Pitch Min', 'Right Blink Opening Speed Mean', 'Fixation Duration Max', 'Head Pitch Std', 'Head Heading Median', 'Right Pupil Diameter Mean', 'Head Roll Std', 'Saccades Number', 'Fixation Duration Median', 'Head Roll Mean', 'Right Blink Closing Amplitude Max', 'Left Pupil Diameter Mean', 'Blinks Duration Min', 'Left Pupil Diameter Median', 'Saccades Duration Std', 'Left Pupil Diameter Std', 'Saccades Duration Median', 'Left Blink Opening Amplitude Max', 'Blinks Duration Mean', 'Right Blink Closing Speed Mean', 'Head Pitch Median', 'Left Blink Closing Amplitude Std', 'Head Pitch Mean']
+    else: #SVC, 3 classes
+        columns_order = ['Right Blink Opening Speed Mean', 'Blinks Number', 'Right Blink Opening Speed Std', 'Left Blink Opening Speed Mean', 'Left Blink Closing Speed Mean', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Right Blink Closing Amplitude Std', 'Left Blink Closing Speed Std', 'Right Blink Closing Speed Std', 'Left Blink Closing Amplitude Mean', 'Head Heading Median', 'Right Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Mean', 'Fixation Duration Std', 'Right Pupil Diameter Mean', 'Blinks Duration Max', 'Head Heading Max', 'Saccades Duration Max', 'Fixation Duration Mean', 'Head Heading Min', 'Head Roll Max', 'Right Pupil Diameter Min', 'Head Roll Mean', 'Saccades Duration Mean', 'Right Pupil Diameter Max', 'Blinks Duration Min', 'Left Blink Closing Speed Max', 'Right Blink Opening Amplitude Mean', 'Left Pupil Diameter Min', 'Right Blink Closing Speed Max', 'Head Roll Min', 'Blinks Duration Mean', 'Head Heading Std', 'Left Blink Opening Speed Max', 'Right Blink Opening Speed Max', 'Left Pupil Diameter Max', 'Head Pitch Max', 'Left Pupil Diameter Std', 'Left Pupil Diameter Mean', 'Fixation Duration Max', 'Head Pitch Std', 'Head Roll Std', 'Right Blink Opening Amplitude Std', 'Right Blink Opening Amplitude Max', 'Head Pitch Min', 'Left Blink Opening Amplitude Max', 'Head Pitch Median', 'Fixation Duration Median', 'Left Blink Closing Amplitude Max', 'Right Pupil Diameter Std', 'Right Blink Closing Amplitude Max', 'Left Pupil Diameter Median', 'Right Blink Closing Speed Mean', 'Saccades Duration Median', 'Saccades Duration Std', 'Blinks Duration Std', 'Head Heading Mean', 'Blinks Duration Median', 'Head Roll Median', 'Saccades Number', 'Head Pitch Mean', 'Right Pupil Diameter Median']
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Blinks Duration Max', 'Right Pupil Diameter Median', 'Head Heading Mean', 'Fixation Duration Max', 'Saccades Duration Max', 'Left Blink Opening Amplitude Mean', 'Head Heading Median', 'Blinks Duration Median', 'Head Heading Min', 'Head Heading Max', 'Right Pupil Diameter Min', 'Right Blink Opening Amplitude Mean', 'Right Blink Opening Speed Max', 'Left Blink Opening Amplitude Std', 'Head Heading Std', 'Left Blink Closing Speed Max', 'Right Blink Closing Amplitude Mean', 'Head Pitch Max', 'Right Blink Closing Amplitude Std', 'Saccades Duration Median', 'Saccades Number', 'Left Blink Closing Amplitude Mean', 'Left Blink Closing Amplitude Std', 'Head Roll Std', 'Saccades Duration Mean', 'Saccades Duration Std', 'Head Pitch Mean', 'Fixation Duration Mean', 'Fixation Duration Std', 'Fixation Duration Median', 'Blinks Number', 'Right Pupil Diameter Max', 'Blinks Duration Mean', 'Head Pitch Min', 'Right Blink Closing Speed Mean', 'Left Blink Opening Amplitude Max', 'Right Blink Opening Amplitude Max', 'Left Blink Opening Speed Mean', 'Head Roll Mean', 'Right Blink Opening Speed Mean', 'Right Blink Closing Speed Std', 'Left Pupil Diameter Std', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Max', 'Left Blink Closing Speed Std', 'Right Blink Opening Speed Std', 'Head Roll Median', 'Head Roll Min', 'Left Blink Opening Speed Max', 'Right Blink Closing Amplitude Max', 'Right Blink Closing Speed Max', 'Left Pupil Diameter Min', 'Left Pupil Diameter Median', 'Right Blink Opening Amplitude Std', 'Left Pupil Diameter Mean', 'Head Pitch Std', 'Left Pupil Diameter Max', 'Head Roll Max', 'Blinks Duration Std', 'Blinks Duration Min', 'Left Blink Closing Speed Mean', 'Right Pupil Diameter Std', 'Right Pupil Diameter Mean', 'Head Pitch Median']
+    else: #KNN, 3 classes
+        columns_order = ['Head Heading Mean', 'Blinks Duration Max', 'Right Pupil Diameter Max', 'Head Roll Median', 'Left Pupil Diameter Median', 'Left Blink Closing Speed Max', 'Saccades Number', 'Head Heading Max', 'Left Blink Opening Speed Max', 'Right Blink Opening Amplitude Max', 'Left Blink Opening Amplitude Std', 'Left Blink Opening Amplitude Max', 'Right Pupil Diameter Median', 'Left Pupil Diameter Max', 'Right Blink Closing Amplitude Max', 'Left Blink Closing Amplitude Mean', 'Head Pitch Min', 'Left Blink Closing Amplitude Std', 'Left Blink Closing Speed Std', 'Right Blink Closing Speed Std', 'Right Blink Closing Amplitude Std', 'Left Blink Closing Amplitude Max', 'Head Heading Median', 'Saccades Duration Max', 'Right Blink Opening Amplitude Std', 'Right Blink Opening Speed Std', 'Right Blink Opening Speed Mean', 'Head Roll Std', 'Blinks Duration Min', 'Head Pitch Mean', 'Blinks Duration Mean', 'Left Blink Opening Speed Std', 'Saccades Duration Mean', 'Right Blink Closing Amplitude Mean', 'Fixation Duration Mean', 'Head Roll Mean', 'Blinks Number', 'Head Heading Min', 'Left Blink Closing Speed Mean', 'Head Roll Max', 'Right Blink Closing Speed Mean', 'Fixation Duration Median', 'Left Blink Opening Amplitude Mean', 'Right Pupil Diameter Min', 'Head Roll Min', 'Right Blink Closing Speed Max', 'Right Blink Opening Amplitude Mean', 'Left Pupil Diameter Min', 'Right Blink Opening Speed Max', 'Head Pitch Std', 'Fixation Duration Std', 'Head Pitch Max', 'Left Blink Opening Speed Mean', 'Blinks Duration Median', 'Saccades Duration Std', 'Fixation Duration Max', 'Left Pupil Diameter Mean', 'Head Heading Std', 'Left Pupil Diameter Std', 'Saccades Duration Median', 'Right Pupil Diameter Std', 'Blinks Duration Std', 'Head Pitch Median', 'Right Pupil Diameter Mean']
+'''
+'''
+#init_blinks_no_head
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = ['Right Pupil Diameter Median', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Std', 'Left Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Left Blink Closing Speed Max', 'Right Pupil Diameter Min', 'Right Blink Closing Speed Max', 'Left Blink Opening Speed Std', 'Right Blink Opening Speed Std', 'Saccades Duration Std', 'Right Blink Closing Speed Std', 'Right Pupil Diameter Std', 'Blinks Number', 'Left Blink Opening Speed Mean', 'Left Blink Closing Speed Std', 'Right Blink Opening Amplitude Std', 'Left Blink Closing Amplitude Mean', 'Left Blink Closing Speed Mean', 'Left Blink Opening Amplitude Mean', 'Left Pupil Diameter Min', 'Left Blink Opening Speed Max', 'Right Blink Closing Amplitude Mean', 'Left Blink Closing Amplitude Max', 'Blinks Duration Mean', 'Right Blink Opening Amplitude Mean', 'Right Blink Opening Amplitude Max', 'Right Blink Opening Speed Max', 'Fixation Duration Std', 'Right Blink Opening Speed Mean', 'Fixation Duration Max', 'Right Blink Closing Speed Mean', 'Fixation Duration Mean', 'Blinks Duration Max', 'Right Pupil Diameter Max', 'Left Pupil Diameter Mean', 'Left Pupil Diameter Max', 'Fixation Duration Median', 'Blinks Duration Median', 'Saccades Number', 'Left Pupil Diameter Std', 'Blinks Duration Min', 'Saccades Duration Mean', 'Left Pupil Diameter Median', 'Saccades Duration Max', 'Saccades Duration Median', 'Blinks Duration Std', 'Left Blink Opening Amplitude Max', 'Right Blink Closing Amplitude Max']
+    else: #SVC, 3 classes
+        columns_order = ['Right Blink Closing Speed Std', 'Left Blink Closing Speed Std', 'Right Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Left Blink Opening Speed Std', 'Right Blink Closing Amplitude Mean', 'Blinks Number', 'Right Blink Opening Speed Std', 'Left Blink Closing Amplitude Std', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Speed Mean', 'Right Pupil Diameter Mean', 'Left Blink Closing Speed Mean', 'Right Blink Opening Amplitude Std', 'Left Blink Opening Amplitude Mean', 'Right Pupil Diameter Min', 'Right Pupil Diameter Std', 'Left Blink Closing Speed Max', 'Right Blink Closing Speed Max', 'Saccades Duration Mean', 'Left Pupil Diameter Min', 'Fixation Duration Std', 'Left Blink Opening Speed Max', 'Left Blink Closing Amplitude Max', 'Right Blink Opening Speed Max', 'Blinks Duration Max', 'Fixation Duration Max', 'Left Pupil Diameter Mean', 'Blinks Duration Mean', 'Right Blink Opening Speed Mean', 'Left Blink Opening Amplitude Max', 'Saccades Duration Max', 'Fixation Duration Median', 'Right Blink Opening Amplitude Mean', 'Left Pupil Diameter Max', 'Blinks Duration Min', 'Left Pupil Diameter Std', 'Right Pupil Diameter Max', 'Right Blink Opening Amplitude Max', 'Saccades Duration Median', 'Saccades Duration Std', 'Saccades Number', 'Fixation Duration Mean', 'Right Blink Closing Amplitude Max', 'Blinks Duration Std', 'Blinks Duration Median', 'Right Blink Closing Speed Mean', 'Left Pupil Diameter Median', 'Right Pupil Diameter Median']
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Saccades Number', 'Left Pupil Diameter Max', 'Right Pupil Diameter Max', 'Blinks Duration Max', 'Saccades Duration Mean', 'Blinks Duration Median', 'Saccades Duration Std', 'Saccades Duration Median', 'Saccades Duration Max', 'Left Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Left Blink Opening Speed Std', 'Right Pupil Diameter Min', 'Left Blink Closing Speed Max', 'Left Blink Closing Speed Std', 'Left Blink Opening Speed Max', 'Left Blink Closing Amplitude Max', 'Right Blink Closing Speed Max', 'Left Blink Opening Amplitude Max', 'Right Blink Opening Amplitude Std', 'Fixation Duration Mean', 'Blinks Number', 'Fixation Duration Std', 'Left Pupil Diameter Mean', 'Fixation Duration Median', 'Fixation Duration Max', 'Blinks Duration Mean', 'Right Blink Opening Speed Std', 'Right Blink Opening Amplitude Mean', 'Right Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Mean', 'Right Blink Opening Speed Mean', 'Right Blink Closing Speed Mean', 'Left Blink Closing Speed Mean', 'Left Pupil Diameter Min', 'Left Blink Closing Amplitude Mean', 'Right Pupil Diameter Mean', 'Right Blink Closing Speed Std', 'Right Blink Closing Amplitude Mean', 'Right Blink Closing Amplitude Max', 'Left Pupil Diameter Std', 'Right Blink Opening Speed Max', 'Left Pupil Diameter Median', 'Right Pupil Diameter Std', 'Blinks Duration Std', 'Blinks Duration Min', 'Left Blink Opening Speed Mean', 'Right Pupil Diameter Median', 'Right Blink Opening Amplitude Max']
+    else: #KNN, 3 classes
+        columns_order = ['Left Blink Opening Amplitude Std', 'Right Blink Opening Amplitude Std', 'Left Pupil Diameter Max', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Max', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Max', 'Right Blink Opening Amplitude Mean', 'Left Blink Closing Speed Std', 'Right Blink Closing Speed Std', 'Saccades Duration Median', 'Left Blink Opening Amplitude Max', 'Right Pupil Diameter Max', 'Fixation Duration Median', 'Left Blink Opening Speed Mean', 'Left Blink Closing Speed Mean', 'Left Blink Closing Amplitude Std', 'Right Blink Closing Speed Max', 'Right Blink Closing Amplitude Mean', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Speed Max', 'Saccades Duration Mean', 'Left Blink Opening Amplitude Mean', 'Left Blink Closing Speed Max', 'Right Blink Opening Speed Std', 'Fixation Duration Mean', 'Right Blink Opening Speed Mean', 'Right Pupil Diameter Std', 'Blinks Duration Mean', 'Left Pupil Diameter Mean', 'Right Blink Closing Speed Mean', 'Right Pupil Diameter Min', 'Blinks Number', 'Left Pupil Diameter Min', 'Right Blink Opening Speed Max', 'Saccades Number', 'Fixation Duration Max', 'Blinks Duration Median', 'Right Pupil Diameter Median', 'Blinks Duration Max', 'Saccades Duration Max', 'Blinks Duration Min', 'Fixation Duration Std', 'Left Pupil Diameter Std', 'Saccades Duration Std', 'Right Blink Closing Amplitude Max', 'Left Pupil Diameter Median', 'Blinks Duration Std']
+'''
+'''
+#left_right
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = []
+    else: #SVC, 3 classes
+        columns_order = []
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = []
+    else: #KNN, 3 classes
+        columns_order = []
+'''
+'''
+#init_blinks_no_min_max
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = ['Saccades Duration Mean', 'Right Blink Closing Speed Std', 'Left Blink Opening Amplitude Std', 'Blinks Number', 'Head Heading Median', 'Left Blink Closing Amplitude Mean', 'Left Blink Closing Speed Mean', 'Left Blink Opening Amplitude Mean', 'Left Blink Opening Speed Mean', 'Right Pupil Diameter Median', 'Right Blink Opening Speed Std', 'Left Blink Opening Speed Std', 'Right Blink Closing Amplitude Std', 'Left Blink Closing Speed Std', 'Right Blink Closing Amplitude Mean', 'Right Blink Closing Speed Mean', 'Head Roll Median', 'Right Blink Opening Amplitude Mean', 'Right Blink Opening Amplitude Std', 'Left Blink Closing Amplitude Std', 'Blinks Duration Mean', 'Head Roll Std', 'Right Blink Opening Speed Mean', 'Head Pitch Std', 'Fixation Duration Mean', 'Left Pupil Diameter Mean', 'Head Heading Mean', 'Fixation Duration Std', 'Left Pupil Diameter Std', 'Fixation Duration Median', 'Saccades Number', 'Right Pupil Diameter Mean', 'Head Heading Std', 'Head Roll Mean', 'Left Pupil Diameter Median', 'Right Pupil Diameter Std', 'Saccades Duration Std', 'Saccades Duration Median', 'Blinks Duration Median', 'Blinks Duration Std', 'Head Pitch Median', 'Head Pitch Mean']
+    else: #SVC, 3 classes
+        columns_order = ['Right Blink Opening Speed Std', 'Blinks Number', 'Right Blink Opening Speed Mean', 'Saccades Duration Mean', 'Right Blink Closing Speed Std', 'Left Blink Opening Amplitude Mean', 'Left Blink Opening Speed Mean', 'Left Blink Closing Speed Mean', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Std', 'Left Blink Opening Speed Std', 'Right Blink Opening Amplitude Mean', 'Left Blink Closing Speed Std', 'Right Blink Closing Amplitude Std', 'Head Heading Median', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Mean', 'Right Pupil Diameter Std', 'Head Roll Median', 'Fixation Duration Mean', 'Left Pupil Diameter Mean', 'Head Heading Std', 'Blinks Duration Mean', 'Head Pitch Std', 'Saccades Number', 'Head Roll Std', 'Left Blink Closing Amplitude Std', 'Right Blink Closing Speed Mean', 'Fixation Duration Median', 'Blinks Duration Std', 'Saccades Duration Median', 'Saccades Duration Std', 'Left Pupil Diameter Std', 'Left Pupil Diameter Median', 'Head Heading Mean', 'Fixation Duration Std', 'Head Roll Mean', 'Head Pitch Median', 'Head Pitch Mean', 'Blinks Duration Median', 'Right Blink Opening Amplitude Std', 'Right Pupil Diameter Median']
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        # f1=0.85
+        columns_order = ['Head Heading Mean', 'Saccades Number', 'Saccades Duration Mean', 'Saccades Duration Std', 'Fixation Duration Std', 'Head Heading Median', 'Left Pupil Diameter Mean', 'Head Roll Median', 'Head Pitch Std', 'Saccades Duration Median', 'Right Blink Closing Amplitude Std', 'Left Blink Closing Amplitude Std', 'Left Blink Opening Speed Std', 'Fixation Duration Mean', 'Fixation Duration Median', 'Right Blink Closing Amplitude Mean', 'Left Blink Closing Speed Mean', 'Left Blink Opening Speed Mean', 'Head Roll Std', 'Blinks Number', 'Left Pupil Diameter Std', 'Left Blink Closing Speed Std', 'Right Blink Opening Speed Std', 'Right Blink Closing Speed Mean', 'Right Blink Opening Speed Mean', 'Blinks Duration Median', 'Right Blink Closing Speed Std', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Std', 'Right Pupil Diameter Mean', 'Left Blink Opening Amplitude Mean', 'Right Blink Opening Amplitude Mean', 'Head Pitch Median', 'Blinks Duration Std', 'Right Blink Opening Amplitude Std', 'Right Pupil Diameter Std', 'Left Pupil Diameter Median', 'Head Heading Std', 'Blinks Duration Mean', 'Head Roll Mean', 'Right Pupil Diameter Median', 'Head Pitch Mean']
+        # f1=0.83
+        #columns_order = ['Head Heading Mean', 'Saccades Number', 'Saccades Duration Mean', 'Saccades Duration Std', 'Fixation Duration Std', 'Head Heading Median', 'Left Pupil Diameter Mean', 'Head Roll Median', 'Head Pitch Std', 'Saccades Duration Median', 'Left Blink Closing Amplitude Std', 'Head Pitch Median', 'Right Blink Opening Amplitude Std', 'Left Blink Opening Amplitude Mean', 'Head Roll Std', 'Left Blink Opening Amplitude Std', 'Right Blink Closing Speed Std', 'Left Blink Closing Speed Std', 'Blinks Duration Median', 'Blinks Number', 'Right Blink Closing Speed Mean', 'Left Blink Opening Speed Std', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Speed Std', 'Left Blink Closing Speed Mean', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Speed Mean', 'Right Blink Closing Amplitude Mean', 'Right Pupil Diameter Mean', 'Right Blink Opening Speed Mean', 'Right Blink Opening Amplitude Mean', 'Right Pupil Diameter Median', 'Fixation Duration Median', 'Left Pupil Diameter Std', 'Blinks Duration Mean', 'Fixation Duration Mean', 'Head Roll Mean', 'Head Heading Std', 'Right Pupil Diameter Std', 'Blinks Duration Std', 'Left Pupil Diameter Median', 'Head Pitch Mean']
+    else: #KNN, 3 classes
+        columns_order = ['Left Pupil Diameter Mean', 'Head Heading Mean', 'Head Heading Median', 'Left Blink Opening Amplitude Std', 'Left Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Std', 'Right Blink Closing Speed Mean', 'Head Roll Median', 'Right Pupil Diameter Median', 'Right Blink Opening Speed Std', 'Head Pitch Mean', 'Right Blink Closing Speed Std', 'Blinks Duration Median', 'Right Blink Closing Amplitude Std', 'Saccades Duration Mean', 'Left Blink Opening Speed Std', 'Fixation Duration Mean', 'Left Blink Closing Speed Std', 'Saccades Number', 'Right Blink Opening Speed Mean', 'Left Blink Closing Speed Mean', 'Blinks Duration Mean', 'Left Blink Opening Speed Mean', 'Left Blink Closing Amplitude Mean', 'Right Blink Opening Amplitude Mean', 'Right Pupil Diameter Mean', 'Saccades Duration Std', 'Blinks Number', 'Left Blink Opening Amplitude Mean', 'Saccades Duration Median', 'Right Blink Closing Amplitude Mean', 'Fixation Duration Std', 'Head Roll Std', 'Head Pitch Std', 'Fixation Duration Median', 'Right Pupil Diameter Std', 'Head Roll Mean', 'Head Heading Std', 'Left Pupil Diameter Std', 'Head Pitch Median', 'Left Pupil Diameter Median', 'Blinks Duration Std']
+'''
+'''
+#init_blinks_no_min_max_no_head
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = ['Right Blink Closing Speed Std', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Mean', 'Left Blink Closing Speed Std', 'Left Blink Closing Speed Mean', 'Left Blink Opening Speed Mean', 'Blinks Number', 'Left Blink Opening Amplitude Mean', 'Left Blink Opening Amplitude Std', 'Right Blink Opening Speed Std', 'Right Blink Closing Amplitude Mean', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Speed Mean', 'Right Pupil Diameter Mean', 'Right Blink Opening Amplitude Mean', 'Right Pupil Diameter Std', 'Left Pupil Diameter Mean', 'Blinks Duration Median', 'Saccades Number', 'Fixation Duration Median', 'Right Blink Closing Speed Mean', 'Saccades Duration Mean', 'Saccades Duration Std', 'Fixation Duration Std', 'Left Pupil Diameter Std', 'Left Blink Closing Amplitude Std', 'Fixation Duration Mean', 'Right Pupil Diameter Median', 'Left Pupil Diameter Median', 'Saccades Duration Median', 'Right Blink Opening Amplitude Std', 'Blinks Duration Mean', 'Blinks Duration Std']
+    else: #SVC, 3 classes
+        columns_order = ['Right Blink Closing Speed Mean', 'Left Blink Closing Speed Mean', 'Blinks Number', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Speed Mean', 'Right Blink Closing Speed Std', 'Left Blink Opening Amplitude Mean', 'Left Blink Closing Speed Std', 'Right Blink Closing Amplitude Mean', 'Right Blink Opening Speed Std', 'Left Blink Opening Amplitude Std', 'Right Blink Opening Amplitude Mean', 'Left Pupil Diameter Mean', 'Saccades Duration Mean', 'Right Blink Closing Amplitude Std', 'Fixation Duration Median', 'Left Blink Opening Speed Std', 'Blinks Duration Median', 'Right Pupil Diameter Mean', 'Right Pupil Diameter Std', 'Fixation Duration Std', 'Left Blink Closing Amplitude Std', 'Saccades Number', 'Left Pupil Diameter Std', 'Fixation Duration Mean', 'Saccades Duration Median', 'Saccades Duration Std', 'Right Blink Opening Speed Mean', 'Right Pupil Diameter Median', 'Blinks Duration Mean', 'Left Pupil Diameter Median', 'Right Blink Opening Amplitude Std', 'Blinks Duration Std']
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Saccades Number', 'Saccades Duration Mean', 'Saccades Duration Std', 'Left Pupil Diameter Mean', 'Right Blink Closing Speed Std', 'Saccades Duration Median', 'Blinks Duration Mean', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Speed Std', 'Left Blink Opening Amplitude Mean', 'Fixation Duration Mean', 'Right Pupil Diameter Median', 'Left Blink Closing Speed Std', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Std', 'Right Blink Closing Speed Mean', 'Right Blink Opening Speed Mean', 'Blinks Number', 'Right Blink Opening Amplitude Std', 'Left Pupil Diameter Std', 'Left Blink Closing Amplitude Mean', 'Right Blink Opening Amplitude Mean', 'Left Blink Opening Speed Mean', 'Fixation Duration Median', 'Left Blink Closing Speed Mean', 'Right Pupil Diameter Std', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Mean', 'Fixation Duration Std', 'Blinks Duration Median', 'Blinks Duration Std', 'Left Pupil Diameter Median']
+    else: #KNN, 3 classes
+        columns_order = ['Blinks Duration Mean', 'Blinks Duration Median', 'Fixation Duration Mean', 'Left Pupil Diameter Mean', 'Right Blink Opening Amplitude Std', 'Saccades Number', 'Right Blink Closing Speed Std', 'Saccades Duration Mean', 'Left Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Mean', 'Right Pupil Diameter Median', 'Left Blink Closing Speed Std', 'Left Blink Opening Amplitude Mean', 'Left Blink Opening Speed Std', 'Left Blink Opening Amplitude Std', 'Right Blink Opening Speed Std', 'Left Blink Closing Amplitude Mean', 'Right Blink Opening Speed Mean', 'Left Blink Opening Speed Mean', 'Left Blink Closing Speed Mean', 'Fixation Duration Median', 'Right Blink Closing Amplitude Mean', 'Right Blink Closing Speed Mean', 'Blinks Number', 'Fixation Duration Std', 'Saccades Duration Std', 'Left Pupil Diameter Std', 'Right Blink Closing Amplitude Std', 'Left Pupil Diameter Median', 'Saccades Duration Median', 'Right Pupil Diameter Std', 'Right Pupil Diameter Mean', 'Blinks Duration Std']
+'''
+'''
+#left_right_no_min_max
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = []
+    else: #SVC, 3 classes
+        columns_order = []
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Left Blink Closing Amplitude Mean', 'Right Blink Opening Amplitude Mean', 'Right Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Mean', 'Left Blink Opening Speed Mean', 'Right Blink Opening Speed Mean', 'Right Blink Closing Speed Mean', 'Left Blink Closing Speed Mean', 'Left Blink Opening Amplitude Std', 'Right Blink Opening Speed Std', 'Left Blink Closing Speed Std', 'Left Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Std', 'Right Blink Closing Speed Std', 'Left Pupil Diameter Mean', 'Right Pupil Diameter Median', 'Left Blink Opening Speed Std', 'Left Pupil Diameter Median', 'Left Pupil Diameter Std', 'Right Pupil Diameter Std', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Std']
+    else: #KNN, 3 classes
+        columns_order = []
+'''
+'''
+#left_right_average_no_min_max, left_right_diff_no_min_max
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = []
+    else: #SVC, 3 classes
+        columns_order = []
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Blink Closing Amplitude Mean Diff', 'Blink Opening Amplitude Mean Diff', 'Blink Closing Amplitude Std Diff', 'Blink Opening Speed Mean Diff', 'Blink Opening Amplitude Mean', 'Blink Closing Amplitude Mean', 'Blink Closing Speed Mean Diff', 'Blink Closing Speed Mean', 'Blink Opening Speed Mean', 'Blink Opening Amplitude Std', 'Blink Closing Amplitude Std', 'Blink Opening Speed Std Diff', 'Blink Closing Speed Std Diff', 'Blink Closing Speed Std', 'Pupil Diameter Mean', 'Pupil Diameter Median Diff', 'Blink Opening Amplitude Std Diff', 'Pupil Diameter Std Diff', 'Pupil Diameter Std', 'Pupil Diameter Median', 'Blink Opening Speed Std', 'Pupil Diameter Mean Diff']
+    else: #KNN, 3 classes
+        columns_order = []
+'''
+#init_blinks_no_min_max, left_right_average_no_min_max, left_right_diff_no_min_max
+if MODEL == "SVC":
+    if BINARY: #SVC, binary
+        columns_order = []
+    else: #SVC, 3 classes
+        columns_order = []
+elif MODEL == "KNN":
+    if BINARY: #KNN, binary
+        columns_order = ['Blink Opening Amplitude Mean Diff', 'Blink Opening Speed Std Diff', 'Blink Closing Speed Mean Diff', 'Saccades Number', 'Saccades Duration Mean', 'Head Heading Median', 'Saccades Duration Std', 'Head Pitch Median', 'Saccades Duration Median', 'Head Heading Mean', 'Blink Closing Speed Std Diff', 'Fixation Duration Mean', 'Pupil Diameter Std', 'Blink Opening Speed Std', 'Pupil Diameter Std Diff', 'Blink Closing Speed Std', 'Fixation Duration Std', 'Blinks Number', 'Blink Closing Amplitude Mean', 'Blink Opening Amplitude Std Diff', 'Pupil Diameter Median Diff', 'Blink Opening Amplitude Std', 'Blink Closing Amplitude Std', 'Blink Opening Amplitude Mean', 'Head Roll Mean', 'Blink Closing Amplitude Mean Diff', 'Blinks Duration Std', 'Blinks Duration Median', 'Head Roll Std', 'Blink Opening Speed Mean', 'Pupil Diameter Median', 'Blink Opening Speed Mean Diff', 'Blink Closing Speed Mean', 'Head Pitch Std', 'Pupil Diameter Mean', 'Fixation Duration Median', 'Blink Closing Amplitude Std Diff', 'Head Heading Std', 'Head Roll Median', 'Blinks Duration Mean', 'Pupil Diameter Mean Diff', 'Head Pitch Mean']
+    else: #KNN, 3 classes
+        columns_order = []
+
+
+
+'''
+#init_blinks, 64 features, old data
 if MODEL == "SVC":
     if BINARY: #SVC, binary
         columns_order = ['Fixation Duration Mean', 'Blinks Number', 'Right Blink Closing Amplitude Mean', 'Head Roll Std', 'Right Blink Closing Amplitude Std', 'Left Blink Opening Amplitude Mean', 'Left Blink Closing Speed Std', 'Left Blink Opening Speed Mean', 'Head Roll Median', 'Blinks Duration Std', 'Fixation Duration Std', 'Right Pupil Diameter Median', 'Head Roll Min', 'Right Blink Opening Amplitude Std', 'Left Blink Opening Speed Std', 'Left Blink Opening Amplitude Std', 'Left Blink Closing Speed Mean', 'Left Blink Closing Amplitude Mean', 'Right Pupil Diameter Std', 'Saccades Number', 'Right Blink Closing Speed Std', 'Head Pitch Max', 'Right Blink Opening Speed Std', 'Saccades Duration Mean', 'Right Pupil Diameter Max', 'Right Blink Opening Amplitude Mean', 'Head Heading Max', 'Head Heading Std', 'Head Heading Min', 'Right Blink Opening Amplitude Max', 'Left Pupil Diameter Max', 'Left Pupil Diameter Min', 'Left Blink Closing Speed Max', 'Right Blink Closing Speed Max', 'Left Blink Closing Amplitude Max', 'Head Pitch Std', 'Saccades Duration Std', 'Head Pitch Min', 'Left Blink Closing Amplitude Std', 'Right Blink Opening Speed Mean', 'Right Blink Opening Speed Max', 'Right Blink Closing Speed Mean', 'Head Heading Median', 'Head Roll Max', 'Blinks Duration Median', 'Left Blink Opening Speed Max', 'Right Pupil Diameter Min', 'Saccades Duration Max', 'Left Pupil Diameter Std', 'Blinks Duration Min', 'Fixation Duration Median', 'Blinks Duration Max', 'Left Blink Opening Amplitude Max', 'Head Heading Mean', 'Left Pupil Diameter Mean', 'Saccades Duration Median', 'Blinks Duration Mean', 'Right Blink Closing Amplitude Max', 'Fixation Duration Max', 'Left Pupil Diameter Median', 'Head Roll Mean', 'Right Pupil Diameter Mean', 'Head Pitch Median', 'Head Pitch Mean']
@@ -49,20 +174,22 @@ elif MODEL == "ETC":
     else: #ETC, 3 classes
         columns_order = ['Right Blink Opening Speed Max', 'Right Pupil Diameter Median', 'Right Blink Opening Amplitude Std', 'Right Blink Closing Speed Max', 'Left Blink Opening Speed Mean', 'Right Pupil Diameter Mean', 'Right Blink Closing Amplitude Mean', 'Left Blink Closing Speed Max', 'Saccades Duration Median', 'Blinks Duration Min', 'Left Blink Opening Amplitude Mean', 'Right Blink Opening Amplitude Mean', 'Right Blink Opening Speed Mean', 'Right Blink Opening Speed Std', 'Right Blink Closing Speed Mean', 'Left Blink Opening Amplitude Std', 'Fixation Duration Median', 'Right Blink Closing Speed Std', 'Left Blink Opening Speed Max', 'Left Pupil Diameter Max', 'Blinks Duration Median', 'Head Heading Max', 'Blinks Number', 'Right Pupil Diameter Max', 'Left Blink Opening Speed Std', 'Head Heading Min', 'Saccades Duration Mean', 'Left Blink Closing Speed Std', 'Head Roll Max', 'Left Blink Closing Speed Mean', 'Right Pupil Diameter Min', 'Fixation Duration Std', 'Head Heading Mean', 'Left Pupil Diameter Mean', 'Left Blink Closing Amplitude Mean', 'Fixation Duration Max', 'Head Roll Median', 'Head Roll Mean', 'Head Pitch Median', 'Left Blink Closing Amplitude Max', 'Head Pitch Min', 'Left Blink Closing Amplitude Std', 'Left Pupil Diameter Min', 'Head Roll Min', 'Head Pitch Mean', 'Left Blink Opening Amplitude Max', 'Right Blink Closing Amplitude Max', 'Saccades Number', 'Right Pupil Diameter Std', 'Saccades Duration Max', 'Head Roll Std', 'Head Pitch Std', 'Head Pitch Max', 'Saccades Duration Std', 'Head Heading Median', 'Blinks Duration Max', 'Left Pupil Diameter Std', 'Head Heading Std', 'Right Blink Opening Amplitude Max', 'Fixation Duration Mean', 'Blinks Duration Mean', 'Left Pupil Diameter Median', 'Right Blink Closing Amplitude Std', 'Blinks Duration Std']
 '''
-#init_blinks_no_head
+
+'''
+#init_blinks_no_head, old data
 if MODEL == "SVC":
     if BINARY: #SVC, binary
         columns_order = ['Left Blink Opening Speed Std', 'Right Blink Closing Amplitude Std', 'Right Pupil Diameter Median', 'Blinks Number', 'Right Blink Closing Speed Std', 'Right Blink Opening Speed Std', 'Left Blink Opening Amplitude Mean', 'Right Blink Opening Amplitude Std', 'Left Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Std', 'Left Blink Closing Speed Std', 'Left Blink Opening Speed Mean', 'Saccades Number', 'Right Pupil Diameter Std', 'Saccades Duration Mean', 'Right Blink Closing Amplitude Mean', 'Right Pupil Diameter Max', 'Right Blink Opening Amplitude Mean', 'Left Blink Closing Speed Max', 'Right Blink Closing Speed Max', 'Fixation Duration Std', 'Left Blink Opening Speed Max', 'Left Pupil Diameter Max', 'Left Blink Closing Speed Mean', 'Right Blink Opening Amplitude Max', 'Right Blink Opening Speed Max', 'Left Pupil Diameter Min', 'Blinks Duration Median', 'Left Blink Closing Amplitude Max', 'Right Blink Opening Speed Mean', 'Right Pupil Diameter Min', 'Saccades Duration Max', 'Left Pupil Diameter Std', 'Fixation Duration Median', 'Right Blink Closing Speed Mean', 'Fixation Duration Max', 'Blinks Duration Std', 'Blinks Duration Min', 'Left Blink Closing Amplitude Std', 'Saccades Duration Std', 'Blinks Duration Mean', 'Blinks Duration Max', 'Left Blink Opening Amplitude Max', 'Saccades Duration Median', 'Left Pupil Diameter Median', 'Fixation Duration Mean', 'Right Blink Closing Amplitude Max', 'Left Pupil Diameter Mean', 'Right Pupil Diameter Mean']
     else: #SVC, 3 classes
-        columns_order = []
+        columns_order = ['Right Blink Closing Amplitude Mean', 'Left Blink Opening Amplitude Mean', 'Blinks Number', 'Left Blink Opening Speed Mean', 'Right Blink Opening Speed Mean', 'Left Blink Closing Amplitude Mean', 'Right Blink Closing Amplitude Std', 'Left Blink Opening Speed Std', 'Right Blink Opening Speed Std', 'Left Blink Closing Speed Std', 'Right Blink Closing Speed Std', 'Left Blink Opening Amplitude Std', 'Right Pupil Diameter Std', 'Left Blink Opening Speed Max', 'Left Pupil Diameter Max', 'Left Blink Closing Speed Mean', 'Fixation Duration Mean', 'Right Pupil Diameter Max', 'Right Blink Opening Speed Max', 'Left Blink Closing Speed Max', 'Blinks Duration Max', 'Right Pupil Diameter Mean', 'Fixation Duration Std', 'Left Blink Closing Amplitude Std', 'Right Blink Closing Speed Max', 'Right Blink Opening Amplitude Mean', 'Saccades Duration Mean', 'Saccades Duration Max', 'Left Pupil Diameter Min', 'Blinks Duration Median', 'Right Pupil Diameter Min', 'Left Blink Closing Amplitude Max', 'Fixation Duration Max', 'Right Blink Opening Amplitude Max', 'Right Blink Opening Amplitude Std', 'Fixation Duration Median', 'Left Pupil Diameter Mean', 'Blinks Duration Min', 'Left Pupil Diameter Std', 'Left Blink Opening Amplitude Max', 'Right Blink Closing Speed Mean', 'Saccades Number', 'Saccades Duration Std', 'Saccades Duration Median', 'Blinks Duration Std', 'Right Blink Closing Amplitude Max', 'Blinks Duration Mean', 'Left Pupil Diameter Median', 'Right Pupil Diameter Median']
 elif MODEL == "KNN":
     if BINARY: #KNN, binary
         columns_order = ['Left Blink Opening Amplitude Max', 'Right Pupil Diameter Max', 'Right Blink Closing Amplitude Mean', 'Saccades Duration Mean', 'Right Pupil Diameter Min', 'Left Blink Opening Amplitude Std', 'Saccades Duration Max', 'Saccades Number', 'Saccades Duration Std', 'Left Pupil Diameter Mean', 'Saccades Duration Median', 'Fixation Duration Mean', 'Fixation Duration Std', 'Fixation Duration Median', 'Blinks Number', 'Fixation Duration Max', 'Blinks Duration Mean', 'Blinks Duration Std', 'Blinks Duration Median', 'Blinks Duration Min', 'Right Blink Opening Speed Max', 'Left Pupil Diameter Std', 'Blinks Duration Max', 'Left Blink Closing Speed Max', 'Right Blink Closing Speed Std', 'Left Blink Closing Speed Std', 'Right Blink Opening Speed Mean', 'Left Pupil Diameter Min', 'Right Blink Opening Speed Std', 'Right Blink Opening Amplitude Std', 'Left Blink Opening Amplitude Mean', 'Right Blink Closing Amplitude Max', 'Left Blink Closing Amplitude Mean', 'Left Blink Closing Speed Mean', 'Right Blink Closing Speed Mean', 'Left Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Mean', 'Right Blink Closing Speed Max', 'Left Blink Opening Speed Max', 'Left Blink Opening Speed Mean', 'Left Pupil Diameter Max', 'Right Pupil Diameter Median', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Max', 'Right Pupil Diameter Std', 'Left Pupil Diameter Median', 'Right Pupil Diameter Mean', 'Left Blink Opening Speed Std', 'Left Blink Closing Amplitude Max']
     else: #KNN, 3 classes
         columns_order = ['Saccades Duration Median', 'Right Blink Closing Amplitude Mean', 'Right Pupil Diameter Max', 'Saccades Duration Mean', 'Saccades Number', 'Fixation Duration Max', 'Left Blink Closing Amplitude Max', 'Left Blink Opening Amplitude Std', 'Left Blink Closing Amplitude Std', 'Right Blink Closing Amplitude Max', 'Right Blink Closing Amplitude Std', 'Right Blink Opening Amplitude Max', 'Right Blink Opening Amplitude Std', 'Left Blink Opening Speed Max', 'Right Blink Opening Speed Std', 'Saccades Duration Std', 'Left Blink Opening Speed Mean', 'Right Blink Opening Speed Mean', 'Left Blink Closing Speed Max', 'Blinks Duration Mean', 'Saccades Duration Max', 'Left Blink Opening Amplitude Mean', 'Right Blink Closing Speed Mean', 'Blinks Duration Max', 'Left Pupil Diameter Mean', 'Left Pupil Diameter Max', 'Right Blink Opening Speed Max', 'Left Blink Closing Speed Std', 'Fixation Duration Mean', 'Right Pupil Diameter Median', 'Left Blink Opening Speed Std', 'Right Blink Opening Amplitude Mean', 'Left Pupil Diameter Min', 'Right Blink Closing Speed Std', 'Left Blink Closing Amplitude Mean', 'Blinks Duration Min', 'Blinks Number', 'Right Blink Closing Speed Max', 'Fixation Duration Std', 'Right Pupil Diameter Std', 'Right Pupil Diameter Min', 'Fixation Duration Median', 'Left Pupil Diameter Std', 'Left Blink Closing Speed Mean', 'Blinks Duration Std', 'Left Blink Opening Amplitude Max', 'Blinks Duration Median', 'Right Pupil Diameter Mean', 'Left Pupil Diameter Median']
-
 '''
-#init_blinks, correlated features dropped (threshold=0.7)
+'''
+#init_blinks, correlated features dropped (threshold=0.7), old data
 # => 33 features
 if MODEL == "SVC":
     if BINARY: #SVC, binary
@@ -316,12 +443,31 @@ def main():
     
     print(len(data_df.columns))
     if LEFT_RIGHT_AVERAGE:
-        for i in range(0,17):
+        #for i in range(0,17):
+        for i in range(0,11):
             
             col1 =  left[i]
             col2 = right[i]
             
             data_df[left_right_average[i]] = (data_df[col1] + data_df[col2])/2
+
+    if LEFT_RIGHT_DIFF:
+        #for i in range(0,17):
+        for i in range(0,11):
+            
+            col1 =  left[i]
+            col2 = right[i]
+            
+            #data_df[left_right_diff[i]] = abs((data_df[col1] - data_df[col2]))
+            data_df[left_right_diff[i]] = (data_df[col1] - data_df[col2])
+
+    if LEFT_RIGHT_DROP:
+        #for i in range(0,17):
+        for i in range(0,11):
+            
+            col1 =  left[i]
+            col2 = right[i]
+            
             data_df = data_df.drop([col1, col2], axis=1)
 
     print(len(data_df.columns))

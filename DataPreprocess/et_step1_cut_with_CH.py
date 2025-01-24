@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import os
+import sys
 
 import pandas as pd
 
@@ -98,6 +99,13 @@ for runs in atcos:
         print(f"Run: {run}")
         full_filename = os.path.join(INPUT_DIR, filename +  ".log")
         et_df = pd.read_csv(full_filename, sep='\t')
+        
+        '''
+        pup_diam = et_df["PupilDiameter"]
+        pup_diam = pup_diam[pup_diam["PupilDiameter"]>0.01]
+        print(pup_diam)
+        continue
+        '''
 
         et_df['UnixTimestamp'] = et_df.apply(lambda row: getUnixTimestamp(row['RealTimeClock']), axis=1)
     
