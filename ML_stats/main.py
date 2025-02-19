@@ -56,15 +56,11 @@ left_right_average = left_right_average_no_min_max
 left_right_diff = left_right_diff_no_min_max
 left_right_ratio = left_right_ratio_no_min_max
 
-#columns_to_select = init
-#columns_to_select = init_blinks
-#columns_to_select = init_blinks_no_head
-
-columns_to_select = init_blinks_no_min_max
+#columns_to_select = init_blinks_no_min_max
 #columns_to_select = init_blinks_no_min_max_no_head
 
 #columns_to_select = left_right
-#columns_to_select = left_right_no_min_max
+columns_to_select = left_right_no_min_max
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -73,19 +69,19 @@ ML_DIR = os.path.join(DATA_DIR, "MLInput")
 FIG_DIR = os.path.join(".", "Figures")
 RANDOM_STATE = 0
 CHS = True
-BINARY = False
+BINARY = True
 
-LEFT_RIGHT_AVERAGE = False
-LEFT_RIGHT_DIFF = False
+LEFT_RIGHT_AVERAGE = True
+LEFT_RIGHT_DIFF = True
 LEFT_RIGHT_RATIO = False
 LEFT_ONLY = False
 RIGHT_ONLY = False
 
-LEFT_RIGHT_DROP = False
+LEFT_RIGHT_DROP = True
 
 CORR_MATRIX = False
 
-#MODEL = "KNN"
+MODEL = "KNN"
 #MODEL = "SVC"
 #MODEL = "ETC"
 #MODEL = "LR"
@@ -94,7 +90,7 @@ CORR_MATRIX = False
 #MODEL = "ABC"
 #MODEL = "BC"
 #MODEL = "RF"
-MODEL = "HGBC"
+#MODEL = "HGBC"
 #MODEL = "GBC" #slow
 #MODEL = "BRF"
 #MODEL = "EEC"
@@ -294,7 +290,7 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
         print(f1_scores)
     
     print(f"Accuracy: {np.mean(accuracies):.2f} ± {np.std(accuracies):.2f}")
-    print(f"Balanced accuracy: {np.mean(bal_accuracies):.2f} ± {np.std(bal_accuracies):.2f}")
+    print(f"Balanced accuracy: {np.mean(bal_accuracies):.3f} ± {np.std(bal_accuracies):.2f}")
     class1_values = [sublist[0] for sublist in c_w_accuracies if not math.isnan(sublist[0])]
     print(f"Class1 accuracy: {np.mean(class1_values):.2f} ± {np.std(class1_values):.2f}")
     class2_values = [sublist[1] for sublist in c_w_accuracies if not math.isnan(sublist[1])]
@@ -302,9 +298,9 @@ def cross_val_stratified_with_label_transform(pipeline, X, y, cv):
     if not BINARY:
         class3_values = [sublist[2] for sublist in c_w_accuracies if not math.isnan(sublist[2])]
         print(f"Class3 accuracy: {np.mean(class3_values):.2f} ± {np.std(class3_values):.2f}")
-    print(f"Precision: {np.mean(precisions):.2f} ± {np.std(precisions):.2f}")
-    print(f"Recall: {np.mean(recalls):.2f} ± {np.std(recalls):.2f}")
-    print(f"F1-Score: {np.mean(f1_scores):.2f} ± {np.std(f1_scores):.2f}")
+    print(f"Precision: {np.mean(precisions):.3f} ± {np.std(precisions):.2f}")
+    print(f"Recall: {np.mean(recalls):.3f} ± {np.std(recalls):.2f}")
+    print(f"F1-Score: {np.mean(f1_scores):.3f} ± {np.std(f1_scores):.2f}")
     
     #print(bal_accuracies)
     #print(f1_scores)
@@ -396,18 +392,19 @@ def main():
             col2 = right[i]
 
             epsilon = 1e-8  # Small constant to avoid division by zero or log of zero
-            '''
+            
             data_df[left_right_ratio[i]] = np.where(
-                data_df[col2] != 0,
-                (data_df[col1] + epsilon) / (data_df[col2] + epsilon),
+                (data_df[col1] + data_df[col2]) != 0,  # Avoid division by zero
+                np.log(np.minimum(data_df[col1], data_df[col2]) / np.maximum(data_df[col1], data_df[col2]) + epsilon),
                 0
                 )
             '''
             data_df[left_right_ratio[i]] = np.where(
-                data_df[col2] != 0,
-                np.log((data_df[col1] + epsilon) / (data_df[col2] + epsilon)),
+                (data_df[col1] + data_df[col2]) != 0,  # Avoid division by zero
+                np.log((np.abs(data_df[col1] - data_df[col2]) / (data_df[col1] + data_df[col2])) + epsilon),
                 0
                 )
+            '''
     
     if LEFT_RIGHT_DROP:
         #for i in range(0,17):
@@ -463,6 +460,8 @@ def main():
     features = data_df.columns
     print(f"Number of features: {len(features)}")
     #print(features)
+    
+    print(f"Number of time slots: {len(data_df)}")
     
     X = data_df.to_numpy()
     y = np.array(scores)

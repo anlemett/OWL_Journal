@@ -37,9 +37,9 @@ left_right_diff = left_right_diff_no_min_max
 #columns_to_select = init_blinks_no_head
 #columns_to_select = left_right
 
-#columns_to_select = init_blinks_no_min_max
+columns_to_select = init_blinks_no_min_max
 #columns_to_select = init_blinks_no_min_max_no_head
-columns_to_select = left_right_no_min_max
+#columns_to_select = left_right_no_min_max
 
 DATA_DIR = os.path.join("..", "..")
 DATA_DIR = os.path.join(DATA_DIR, "Data")
@@ -51,9 +51,9 @@ RANDOM_STATE = 0
 CHS = True
 BINARY = True
 
-LEFT_RIGHT_AVERAGE = True
-LEFT_RIGHT_DIFF = True
-LEFT_RIGHT_DROP = True
+LEFT_RIGHT_AVERAGE = False
+LEFT_RIGHT_DIFF = False
+LEFT_RIGHT_DROP = False
 
 DROP_CORRELATED = False
 
